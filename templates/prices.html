@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Market Prices - Krishimitra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-chart-line"></i> Market Prices</h1>
+        <p>Real-time mandi prices across India</p>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <!-- Filters -->
+        <div class="card">
+            <h3>Filter Prices</h3>
+            <form method="post" action="{{ url_for('prices') }}">
+                <div class="grid grid-3">
+                    <div class="form-group">
+                        <label for="commodity">commodity</label>
+                        <select id="commodity" name="commodity" class="form-control">
+                            <option value="">All Commodities</option>
+                            {% for item in Commodity %}
+                            <option value="{{ item }}" {% if item == commodity_filter %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <select id="state" name="state" class="form-control">
+                            <option value="">All States</option>
+                            {% for state in states %}
+                            <option value="{{ state }}" {% if state == state_filter %}selected{% endif %}>{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Price Table for single commodity-->
+        {% if is_commodity %}
+        <div class="table-container">
+            <table id="priceTable">
+                <thead>
+                    <tr>
+                        <th>State</th>
+                        <th>APMC</th>
+                        <th>commodity</th>
+                        <th>Min Price</th>
+                        <th>Modal Price</th>
+                        <th>Max Price</th>
+                        <th>Transport Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if prices %}
+                        {% for price in prices %}
+                        <tr>
+                            <td><strong>{{ price.state }}</strong></td>
+                            <td>{{ price.APMC }}</td>
+                            <td>{{ price.Commodity }}</td>
+                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Min_Price }}</span></td>
+                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Modal_Price }}</span></td>
+                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Max_Price }}</span></td>
+                            <td>
+                                <a href="/transport-calculator" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">
+                                    <i class="fas fa-calculator"></i> Calculate
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-inbox fa-3x" style="color: var(--text-light); margin-bottom: 1rem;"></i>
+                                <p>No price data available for the selected filters.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Price Trends -->
+        <div class="card mt-3">
+            <h3><i class="fas fa-chart-area"></i> Price Trends</h3>
+            <p style="color: var(--text-light);">Historical price trends will be displayed here once data is integrated.</p>
+            <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
+                <i class="fas fa-chart-line fa-4x" style="color: var(--text-light);"></i>
+                <p style="margin-top: 1rem; color: var(--text-light);">Chart visualization coming soon</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-3 mt-3">
+            <div class="card">
+                <i class="fas fa-calculator fa-2x text-primary mb-1"></i>
+                <h4>Transport Calculator</h4>
+                <p>Calculate profit after transport costs</p>
+                <a href="/transport-calculator" class="btn btn-primary">Use Calculator</a>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-map-marked-alt fa-2x text-primary mb-1"></i>
+                <h4>Compare Regions</h4>
+                <p>View regional price disparities</p>
+                <a href="/compare-region" class="btn btn-primary">Compare Now</a>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-upload fa-2x text-primary mb-1"></i>
+                <h4>Submit Your Data</h4>
+                <p>Help improve transparency</p>
+                <a href="/farmer-input" class="btn btn-primary">Contribute</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

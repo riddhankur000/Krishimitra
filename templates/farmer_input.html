@@ -1,0 +1,106 @@
+
+<!-- ============================================ -->
+<!-- templates/farmer_input.html -->
+<!-- ============================================ -->
+{% extends "base.html" %}
+{% block title %}Submit Data - Krishimitra{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-upload"></i> Crowdsourced Data Input</h1>
+        <p>Help improve market transparency by sharing your sale data</p>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Submit Your Sale Data</h3>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="crop">Crop Sold <span style="color: red;">*</span></label>
+                        <select id="crop" name="crop" class="form-control" required>
+                            <option value="">Select crop</option>
+                            {% for crop in crops %}
+                            <option value="{{ crop }}">{{ crop }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity (Quintals) <span style="color: red;">*</span></label>
+                        <input type="number" id="quantity" name="quantity" class="form-control" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Price Received (₹/Quintal) <span style="color: red;">*</span></label>
+                        <input type="number" id="price" name="price" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mandi">Mandi <span style="color: red;">*</span></label>
+                        <select id="mandi" name="mandi" class="form-control" required>
+                            <option value="">Select mandi</option>
+                            {% for mandi in mandis %}
+                            <option value="{{ mandi }}">{{ mandi }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Sale Date <span style="color: red;">*</span></label>
+                        <input type="date" id="date" name="date" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Any additional information about the sale..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photo">Upload Photo (Optional)</label>
+                        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-check"></i> Submit Data
+                    </button>
+                </form>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h4><i class="fas fa-shield-alt"></i> Data Privacy</h4>
+                    <p>Your personal information is kept confidential. Only aggregated data is shared publicly to maintain market transparency.</p>
+                </div>
+
+                <div class="card mt-2">
+                    <h4><i class="fas fa-trophy"></i> Contribution Impact</h4>
+                    <p>Your submissions help:</p>
+                    <ul style="line-height: 1.8;">
+                        <li>Other farmers make better decisions</li>
+                        <li>Identify unfair pricing practices</li>
+                        <li>Improve data accuracy in your region</li>
+                        <li>Support policy advocacy for farmers</li>
+                    </ul>
+                </div>
+
+                <div class="card mt-2">
+                    <h4><i class="fas fa-chart-line"></i> Your Statistics</h4>
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="display: inline-block; margin: 0 1rem;">
+                            <h2 style="color: var(--primary-color); margin: 0;">15</h2>
+                            <p style="margin: 0;">Submissions</p>
+                        </div>
+                        <div style="display: inline-block; margin: 0 1rem;">
+                            <h2 style="color: var(--primary-color); margin: 0;">92</h2>
+                            <p style="margin: 0;">Reputation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

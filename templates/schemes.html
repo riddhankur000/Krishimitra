@@ -1,0 +1,59 @@
+<!-- templates/schemes.html -->
+{% extends "base.html" %}
+{% block title %}Government Schemes - Krishimitra{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-hand-holding-usd"></i> Government Schemes</h1>
+        <p>Explore schemes and subsidies available for farmers</p>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <div class="card">
+            <form method="get">
+                <div class="grid grid-3">
+                    <div class="form-group">
+                        <label for="scheme-type">Scheme Type</label>
+                        <select id="scheme-type" class="form-control">
+                            <option value="">All Types</option>
+                            <option>Financial Support</option>
+                            <option>Insurance</option>
+                            <option>Subsidy</option>
+                            <option>Training</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="crop-filter">Crop</label>
+                        <select id="crop-filter" class="form-control">
+                            <option value="">All Crops</option>
+                            <option>Wheat</option>
+                            <option>Rice</option>
+                            <option>Cotton</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+            {% for scheme in schemes %}
+            <div class="card">
+                <h3 style="color: var(--primary-color);">{{ scheme.name }}</h3>
+                <p>{{ scheme.description }}</p>
+                <div style="margin: 1rem 0;">
+                    <span style="background-color: var(--primary-color); color: white; padding: 0.3rem 0.8rem; border-radius: 3px; font-size: 0.9rem;">{{ scheme.type }}</span>
+                </div>
+                <p><strong>Applicable:</strong> {{ scheme.applicable }}</p>
+                <button class="btn btn-primary">Learn More</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

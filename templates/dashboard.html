@@ -1,0 +1,127 @@
+
+<!-- ============================================ -->
+<!-- templates/dashboard.html -->
+<!-- ============================================ -->
+{% extends "base.html" %}
+{% block title %}Dashboard - Krishimitra{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <p>Welcome back, {{ session.user_name }}!</p>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        {% if user_type == 'farmer' %}
+
+        <div class="grid grid-4">
+            <div class="card text-center">
+                <i class="fas fa-chart-line fa-2x text-primary mb-1"></i>
+                <h2>15</h2>
+                <p>Data Submissions</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-rupee-sign fa-2x text-primary mb-1"></i>
+                <h2>₹2,500</h2>
+                <p>Avg Price (Last Month)</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-star fa-2x text-primary mb-1"></i>
+                <h2>92</h2>
+                <p>Reputation Score</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-bookmark fa-2x text-primary mb-1"></i>
+                <h2>8</h2>
+                <p>Saved Searches</p>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+            <div class="card">
+                <h3>Your Recent Activity</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);">
+                        <i class="fas fa-upload" style="color: var(--primary-color);"></i>
+                        Submitted price data for Wheat - 2 days ago
+                    </li>
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);">
+                        <i class="fas fa-calculator" style="color: var(--primary-color);"></i>
+                        Used transport calculator - 5 days ago
+                    </li>
+                    <li style="padding: 0.8rem 0;">
+                        <i class="fas fa-comment" style="color: var(--primary-color);"></i>
+                        Posted in community forum - 1 week ago
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Personalized Recommendations</h3>
+                <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">Best Mandi Today</h4>
+                    <p>Mumbai APMC is offering ₹7,500/quintal for Cotton - 15% higher than average!</p>
+                    <a href="/transport-calculator" class="btn btn-primary">Calculate Profit</a>
+                </div>
+                <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">New Scheme Alert</h4>
+                    <p>PM-KISAN next installment releasing on Nov 15, 2025</p>
+                    <a href="/schemes" class="btn btn-primary">View Schemes</a>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+
+        <div class="grid grid-4">
+            <div class="card text-center">
+                <i class="fas fa-database fa-2x text-primary mb-1"></i>
+                <h2>5,234</h2>
+                <p>Data Points</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-map-marked-alt fa-2x text-primary mb-1"></i>
+                <h2>12</h2>
+                <p>Regions Tracked</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-exclamation-triangle fa-2x text-primary mb-1"></i>
+                <h2>3</h2>
+                <p>Price Alerts</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-download fa-2x text-primary mb-1"></i>
+                <h2>45</h2>
+                <p>Exports</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <h3>Regional Disparity Alerts</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Crop</th>
+                        <th>High Price Region</th>
+                        <th>Low Price Region</th>
+                        <th>Disparity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cotton</td>
+                        <td>Maharashtra (₹7,500)</td>
+                        <td>Punjab (₹5,200)</td>
+                        <td style="color: red; font-weight: bold;">44%</td>
+                        <td><button class="btn">Analyze</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

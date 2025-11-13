@@ -107,181 +107,157 @@ http://127.0.0.1:5000
 
 ## 🎨 Features Currently Implemented
 
-### Frontend Features ✅
-- ✅ Responsive navigation with mobile menu
-- ✅ Homepage with hero section and features
-- ✅ Market prices page with filters
-- ✅ Transport & profit calculator
-- ✅ Regional comparison page
-- ✅ Farmer data input form
-- ✅ Community forum layout
-- ✅ Government schemes page
-- ✅ Login/Register pages
-- ✅ User dashboard (farmer & NGO views)
-- ✅ Contact page with form
-- ✅ Terms & Privacy page
-- ✅ Flash message system
-- ✅ Fully responsive design
-
-### Current Functionality ✅
-- ✅ All routes working
-- ✅ Basic navigation
-- ✅ Mock data display
-- ✅ Form submissions (not saved yet)
-- ✅ Session-based login (demo mode)
-- ✅ Flash messages
-- ✅ Responsive mobile menu
 
 ## 📝 Next Steps for Backend Integration
 
 Now that the frontend is complete, here's what needs to be implemented:
 
-### Phase 1: Database Setup
+<!-- ### Phase 1: Database Setup -->
 ```python
 # Add to app.py:
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_login import LoginManager
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-```
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
+# db = SQLAlchemy(app)
+# login_manager = LoginManager(app)
+# ```
 
-**Models to create:**
-- User (farmers, NGOs, traders)
-- Crop
-- MarketPrice
-- Mandi
-- FarmerInput (crowdsourced data)
-- CommunityPost
-- Scheme
+# **Models to create:**
+# - User (farmers, NGOs, traders)
+# - Crop
+# - MarketPrice
+# - Mandi
+# - FarmerInput (crowdsourced data)
+# - CommunityPost
+# - Scheme
 
-### Phase 2: Web Scraping
-- Government mandi APIs
-- State agricultural department websites
-- APMC price data
+# ### Phase 2: Web Scraping
+# - Government mandi APIs
+# - State agricultural department websites
+# - APMC price data
 
-**Recommended libraries:**
-- BeautifulSoup4 (already in requirements.txt)
-- Requests (already in requirements.txt)
-- Selenium (if needed for dynamic content)
+# **Recommended libraries:**
+# - BeautifulSoup4 (already in requirements.txt)
+# - Requests (already in requirements.txt)
+# - Selenium (if needed for dynamic content)
 
-### Phase 3: Authentication System
-- Implement Flask-Login (already in requirements.txt)
-- Password hashing with werkzeug.security
-- Email verification (optional)
-- SMS OTP verification
+# ### Phase 3: Authentication System
+# - Implement Flask-Login (already in requirements.txt)
+# - Password hashing with werkzeug.security
+# - Email verification (optional)
+# - SMS OTP verification
 
-### Phase 4: Data Visualization
-- Integrate Chart.js or Plotly
-- Price trend charts
-- Regional heatmaps
-- Interactive maps (Leaflet.js or Google Maps API)
+# ### Phase 4: Data Visualization
+# - Integrate Chart.js or Plotly
+# - Price trend charts
+# - Regional heatmaps
+# - Interactive maps (Leaflet.js or Google Maps API)
 
-### Phase 5: Advanced Features
-- Real-time price alerts
-- Price prediction (ML model)
-- WhatsApp/SMS notifications
-- Multi-language support
-- Export to PDF/Excel
-- API endpoints for mobile app
+# ### Phase 5: Advanced Features
+# - Real-time price alerts
+# - Price prediction (ML model)
+# - WhatsApp/SMS notifications
+# - Multi-language support
+# - Export to PDF/Excel
+# - API endpoints for mobile app
 
-## 🔧 Configuration
+# ## 🔧 Configuration
 
-### Secret Key
-Change the secret key in `app.py`:
-```python
-app.secret_key = 'your-very-secret-key-here'
-```
+# ### Secret Key
+# Change the secret key in `app.py`:
+# ```python
+# app.secret_key = 'your-very-secret-key-here'
+# ```
 
-### Database (Future)
-```python
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
-# Or for production:
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/krishimitra'
-```
+# ### Database (Future)
+# ```python
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
+# # Or for production:
+# # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/krishimitra'
+# ```
 
-## 🎨 Customization
+# ## 🎨 Customization
 
-### Colors
-Edit colors in `static/css/style.css`:
-```css
-:root {
-    --primary-color: #2d7a3e;    /* Main green */
-    --secondary-color: #5cb85c;  /* Light green */
-    --accent-color: #ff9800;     /* Orange */
-}
-```
+# ### Colors
+# Edit colors in `static/css/style.css`:
+# ```css
+# :root {
+#     --primary-color: #2d7a3e;    /* Main green */
+#     --secondary-color: #5cb85c;  /* Light green */
+#     --accent-color: #ff9800;     /* Orange */
+# }
+# ```
 
-### Logo
-Add your logo to `static/images/logo.png`
+# ### Logo
+# Add your logo to `static/images/logo.png`
 
-### Mock Data
-Current mock data is in `app.py`. Replace with real data once database is set up.
+# ### Mock Data
+# Current mock data is in `app.py`. Replace with real data once database is set up.
 
-## 📱 Testing
+# ## 📱 Testing
 
-### Test Different User Types
-The demo login accepts any credentials and sets up a basic session. To test:
-- Farmer view: Login with any credentials (defaults to farmer)
-- NGO view: Modify session in code temporarily
+# ### Test Different User Types
+# The demo login accepts any credentials and sets up a basic session. To test:
+# - Farmer view: Login with any credentials (defaults to farmer)
+# - NGO view: Modify session in code temporarily
 
-### Test Responsive Design
-- Desktop: Full browser window
-- Tablet: Resize to ~768px width
-- Mobile: Resize to ~375px width
+# ### Test Responsive Design
+# - Desktop: Full browser window
+# - Tablet: Resize to ~768px width
+# - Mobile: Resize to ~375px width
 
-## 🐛 Troubleshooting
+# ## 🐛 Troubleshooting
 
-### Port already in use
-```bash
-# Change port in app.py:
-app.run(debug=True, port=5001)
-```
+# ### Port already in use
+# ```bash
+# # Change port in app.py:
+# app.run(debug=True, port=5001)
+# ```
 
-### Module not found
-```bash
-pip install -r requirements.txt
-```
+# ### Module not found
+# ```bash
+# pip install -r requirements.txt
+# ```
 
-### Templates not found
-Ensure all HTML files are in the `templates/` directory
+# ### Templates not found
+# Ensure all HTML files are in the `templates/` directory
 
-### CSS not loading
-Check that `static/css/style.css` exists and Flask is running
+# ### CSS not loading
+# Check that `static/css/style.css` exists and Flask is running
 
-## 📞 Support
+# ## 📞 Support
 
-For questions or issues:
-- Email: dev@krishimitra.in
-- Create an issue in the project repository
+# For questions or issues:
+# - Email: dev@krishimitra.in
+# - Create an issue in the project repository
 
-## 📄 License
+# ## 📄 License
 
-This project is intended for educational and social good purposes.
+# This project is intended for educational and social good purposes.
 
-## 🙏 Acknowledgments
+# ## 🙏 Acknowledgments
 
-- Designed to help Indian farmers get fair prices
-- Inspired by the need for market transparency
-- Built with modern web technologies
+# - Designed to help Indian farmers get fair prices
+# - Inspired by the need for market transparency
+# - Built with modern web technologies
 
----
+# ---
 
-## 🎯 Current Status
+# ## 🎯 Current Status
 
-**Frontend: 100% Complete ✅**
-- All 13 pages designed and functional
-- Fully responsive
-- Modern, farmer-friendly UI
-- Ready for backend integration
+# **Frontend: 100% Complete ✅**
+# - All 13 pages designed and functional
+# - Fully responsive
+# - Modern, farmer-friendly UI
+# - Ready for backend integration
 
-**Backend: 0% - Ready to Start 🚀**
-- Database models needed
-- Web scraping implementation needed
-- Authentication system needed
-- Real data integration needed
+# **Backend: 0% - Ready to Start 🚀**
+# - Database models needed
+# - Web scraping implementation needed
+# - Authentication system needed
+# - Real data integration needed
 
----
+# ---
 
-**Ready to proceed with backend development? Let me know which phase you'd like to tackle first!**
+# **Ready to proceed with backend development? Let me know which phase you'd like to tackle first!**
