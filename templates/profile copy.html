@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Krishimitra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+        <p>View and manage your account information</p>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <div class="grid grid-2">
+            <!-- Profile Information -->
+            <div class="card">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    <h2 style="margin-top: 1rem;">{{ user.full_name }}</h2>
+                    <p style="color: var(--text-light);">
+                        {% if user.user_type == 'farmer' %}
+                            <i class="fas fa-leaf"></i> Farmer
+                        {% elif user.user_type == 'ngo' %}
+                            <i class="fas fa-hands-helping"></i> NGO / Policy Researcher
+                        {% else %}
+                            <i class="fas fa-shopping-cart"></i> Trader / Buyer
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">
+                        <i class="fas fa-info-circle"></i> Basic Information
+                    </h3>
+                    
+                    <div class="profile-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p>{{ user.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Phone</strong>
+                            <p>{{ user.phone }}</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <strong>Member Since</strong>
+                            <p>{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+
+                    {% if user.last_login %}
+                    <div class="profile-info-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Last Login</strong>
+                            <p>{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Farmer Specific Information -->
+            {% if user.user_type == 'farmer' %}
+            <div>
+                <div class="card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        <i class="fas fa-tractor"></i> Farm Details
+                    </h3>
+
+                    {% if user.state %}
+                    <div class="profile-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Location</strong>
+                            <p>{{ user.district or 'N/A' }}, {{ user.state }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.farm_size %}
+                    <div class="profile-info-item">
+                        <i class="fas fa-ruler-combined"></i>
+                        <div>
+                            <strong>Farm Size</strong>
+                            <p>{{ user.farm_size }} acres</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.primary_crops %}
+                    <div class="profile-info-item">
+                        <i class="fas fa-seedling"></i>
+                        <div>
+                            <strong>Primary Crops</strong>
+                            <p>
+                                {% for crop in user.get_primary_crops_list() %}
+                                    <span style="display: inline-block; background-color: var(--primary-color); color: white; padding: 0.2rem 0.6rem; border-radius: 3px; margin: 0.2rem; font-size: 0.9rem;">
+                                        {{ crop }}
+                                    </span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Activity Statistics -->
+                <div class="card mt-2">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        <i class="fas fa-chart-bar"></i> Activity Statistics
+                    </h3>
+
+                    <div class="grid grid-2" style="gap: 1rem;">
+                        <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                            <i class="fas fa-upload fa-2x text-primary mb-1"></i>
+
+                            <h2 style="margin: 0.5rem 0;"></h2>
+                            <p style="margin: 0; color: var(--text-light);">Data Submissions</p>
+                        </div>
+
+                        <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                            <i class="fas fa-comments fa-2x text-primary mb-1"></i>
+                            <h2 style="margin: 0.5rem 0;">{{ user.posts|length }}</h2>
+                            <p style="margin: 0; color: var(--text-light);">Forum Posts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- NGO/Trader Information -->
+            <div class="card">
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                    <i class="fas fa-briefcase"></i> Organization Details
+                </h3>
+                
+                <p style="color: var(--text-light);">
+                    As a {{ user.user_type }}, you have access to aggregated market data and analytics tools.
+                </p>
+
+                <div class="mt-2">
+                    <a href="{{ url_for('compare_region') }}" class="btn btn-primary" style="display: block; margin-bottom: 1rem;">
+                        <i class="fas fa-map-marked-alt"></i> View Regional Analysis
+                    </a>
+                    <a href="{{ url_for('prices') }}" class="btn btn-primary" style="display: block;">
+                        <i class="fas fa-chart-line"></i> Market Prices
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity (For Farmers) -->
+        {% if user.user_type == 'farmer' and user.farmer_inputs %}
+        <div class="card mt-3">
+            <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                <i class="fas fa-history"></i> Recent Submissions
+            </h3>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Crop</th>
+                            <th>Quantity</th>
+                            <th>Price (₹/Quintal)</th>
+                            <th>Mandi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for input in user.farmer_inputs|reverse %}
+                        {% if loop.index <= 10 %}
+                        <tr>
+                            <td>{{ input.sale_date.strftime('%Y-%m-%d') }}</td>
+                            <td><strong>{{ input.crop }}</strong></td>
+                            <td>{{ input.quantity }} quintals</td>
+                            <td style="color: var(--primary-color); font-weight: bold;">₹{{ input.price }}</td>
+                            <td>{{ input.mandi }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="card mt-3" style="text-align: center;">
+            <h3 style="margin-bottom: 1.5rem;">Quick Actions</h3>
+            <div class="grid grid-3">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                </a>
+                {% if user.user_type == 'farmer' %}
+                <a href="{{ url_for('farmer_input') }}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Submit Data
+                </a>
+                {% endif %}
+                <a href="{{ url_for('prices') }}" class="btn btn-primary">
+                    <i class="fas fa-chart-line"></i> View Prices
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.profile-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-info-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 0.2rem;
+}
+
+.profile-info-item strong {
+    display: block;
+    color: var(--text-dark);
+    margin-bottom: 0.2rem;
+}
+
+.profile-info-item p {
+    margin: 0;
+    color: var(--text-light);
+}
+</style>
+{% endblock %}

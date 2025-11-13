@@ -16,6 +16,17 @@ document.addEventListener('DOMContentLoaded', function() {
             navMenu.classList.remove('active');
         });
     });
+
+    // Mobile dropdown toggle for user menu
+    const userMenuToggle = document.querySelector('.user-menu-toggle');
+    const userDropdown = document.querySelector('.user-dropdown');
+    
+    if (userMenuToggle && window.innerWidth <= 768) {
+        userMenuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            userDropdown.classList.toggle('active');
+        });
+    }
     
     // Auto-close flash messages
     const alertCloses = document.querySelectorAll('.alert-close');
