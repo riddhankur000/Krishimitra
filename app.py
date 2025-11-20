@@ -16,15 +16,26 @@ from datetime import datetime
 from models import db, User, FarmerInput, CommunityPost, MarketPrice
 
 # --- Setup Chrome Driver ---
+
 chrome_options = Options()
-chrome_options.add_argument('--start-maximized')
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-chrome_options.add_argument('--headless')  # Run in background
+
+# REMOVE: Service(ChromeDriverManager().install())
+# REPLACE WITH: Service() 
+# Selenium will handle the driver download automatically.
+service = Service() 
+
+# chrome_options = Options()
+# chrome_options.add_argument('--start-maximized')
+# chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+# chrome_options.add_argument('--headless')  # Run in background
 
 # Extract commodity list from website
 def extract_commodity_list():
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
         url = 'https://enam.gov.in/web/dashboard/live_price'
         driver.get(url)
 
@@ -55,7 +66,8 @@ def extract_commodity_list():
 
 def extract_commodity_data(commodity_name):
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
         url = 'https://enam.gov.in/web/dashboard/live_price'
         driver.get(url)
 
