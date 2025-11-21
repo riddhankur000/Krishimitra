@@ -280,45 +280,56 @@ def prices():
 
 @app.route('/transport-calculator', methods=['GET', 'POST'])
 def transport_calculator():
+    show_calc = False
     # 1. Get Master Data
     master_df = extract_commodity_list()
     
-    # 2. Data Cleaning (Crucial for Math)
-    # Ensure prices are numbers (remove commas if present)
+    # 2. Data Cleaning
     if not master_df.empty:
-        # Convert 'Modal_Price' to numeric, coercing errors to NaN, then fill with 0
-        master_df['Modal_Price'] = pd.to_numeric(master_df['Modal_Price'].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
-        master_df['state'] = master_df['state'].str.upper() # Normalize state names
-    
-    # 3. Create Mappings for Dropdowns & Auto-fill
-    # Map: Crop -> List of Mandis
+        # Clean Price
+        master_df['Modal_Price'] = pd.to_numeric(
+            master_df['Modal_Price'].astype(str).str.replace(',', ''), 
+            errors='coerce'
+        ).fillna(0)
+        
+        # Clean State
+        master_df['state'] = master_df['state'].str.upper()
+        
+        # --- NEW: Create the combined "Name, State" column ---
+        # This creates strings like "Ludhiana Mandi, Punjab"
+        master_df['mandi_display'] = master_df['APMC'] + ", " + master_df['state'].str.title()
+
+    # 3. Create Mappings using the NEW 'mandi_display' column
     crop_to_mandi = {}
-    if not master_df.empty:
-        crop_to_mandi = master_df.groupby('Commodity')['APMC'].apply(lambda x: sorted(list(set(x)))).to_dict()
-    
-    # Map: Crop -> { Mandi : Price } (For auto-filling price in JS)
     price_lookup = {}
+    
     if not master_df.empty:
+        # Map: Crop -> List of ["Mandi, State"]
+        # We group by Commodity, but take values from 'mandi_display'
+        crop_to_mandi = master_df.groupby('Commodity')['mandi_display'].apply(lambda x: sorted(list(set(x)))).to_dict()
+        
+        # Map: Crop -> { "Mandi, State" : Price }
         for _, row in master_df.iterrows():
             crop = row['Commodity']
-            mandi = row['APMC']
+            
+            # Use the combined name as the key
+            mandi_key = row['mandi_display'] 
             price = row['Modal_Price']
             
             if crop not in price_lookup:
                 price_lookup[crop] = {}
-            price_lookup[crop][mandi] = price
+            price_lookup[crop][mandi_key] = price
 
-    # Lists for initial dropdowns
     all_crops = sorted(list(crop_to_mandi.keys()))
 
     result = None
-    lowest_3_mandis = []
+    lowest_mandis = []
 
     if request.method == 'POST':
         try:
-            # Get Form Data
+            # Get Data
             selected_crop = request.form.get('crop')
-            selected_mandi = request.form.get('to_mandi')
+            selected_mandi = request.form.get('to_mandi') # This will now contain "Mandi, State"
             quantity = float(request.form.get('quantity', 0))
             price = float(request.form.get('price', 0))
             transport_cost = float(request.form.get('transport_cost', 0))
@@ -331,47 +342,39 @@ def transport_calculator():
                 'gross_revenue': gross_revenue,
                 'transport_cost': transport_cost,
                 'net_revenue': net_revenue,
+                'quantity': quantity,
                 'selected_crop': selected_crop,
-                'selected_mandi': selected_mandi,
-                'quantity': quantity
+                'selected_mandi': selected_mandi
             }
 
-            # Logic for "Compare Other Mandis" (Lowest 3 prices for this crop)
+            # --- LOGIC FOR COMPARISON ---
             if not master_df.empty and selected_crop:
-                # Filter for the selected crop
                 crop_df = master_df[master_df['Commodity'] == selected_crop].copy()
-                
-                # Sort by Price Ascending (Cheapest/Lowest first)
                 crop_df = crop_df.sort_values(by='Modal_Price', ascending=True)
                 
-                # Take top 3
-                top_3_rows = crop_df.head(3).to_dict(orient='records')
+                top_3 = crop_df.head(3).to_dict(orient='records')
                 
-                # Calculate potential revenues for these comparisons
-                # (Assuming same transport cost for comparison purposes, or you can leave blank)
-                for row in top_3_rows:
-                    pot_gross = quantity * row['Modal_Price']
-                    pot_net = pot_gross - transport_cost
-                    
-                    lowest_3_mandis.append({
-                        'APMC': row['APMC'],
+                for row in top_3:
+                    pot_net = (quantity * row['Modal_Price']) - transport_cost
+                    lowest_mandis.append({
+                        'APMC': row['mandi_display'], # Show "Mandi, State" here too
                         'Price': row['Modal_Price'],
-                        'Est_Transport': transport_cost, # Using same transport cost for reference
                         'Pot_Net': pot_net
                     })
+            show_calc = True
 
         except Exception as e:
             print(f"Calculation Error: {e}")
-            flash("Error in calculation. Please check your inputs.", "danger")
-
+            flash("Error in calculation.", "danger")
+    print(show_calc)
     return render_template('transport_calculator.html', 
+                           show_calc=show_calc,
                            current_user=current_user,
                            crops=all_crops,
-                           crop_to_mandi=crop_to_mandi, # For JS Dropdown
-                           price_lookup=price_lookup,   # For JS Auto-price
+                           crop_to_mandi=crop_to_mandi,
+                           price_lookup=price_lookup,
                            result=result,
-                           lowest_mandis=lowest_3_mandis)
-
+                           lowest_mandis=lowest_mandis)
 
 @app.route('/compare-region')
 def compare_region():
