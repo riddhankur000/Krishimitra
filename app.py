@@ -19,6 +19,8 @@ from models import db, User, FarmerInput, CommunityPost, MarketPrice
 
 chrome_options = Options()
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+chrome_options.add_argument('--headless')  # Run in background
+
 
 # REMOVE: Service(ChromeDriverManager().install())
 # REPLACE WITH: Service() 
@@ -29,6 +31,18 @@ service = Service()
 # chrome_options.add_argument('--start-maximized')
 # chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 # chrome_options.add_argument('--headless')  # Run in background
+
+# Mock data for demonstration
+MOCK_CROPS = []
+MOCK_STATES = []
+MOCK_MANDIS = ['Delhi Azadpur', 'Mumbai APMC', 'Bangalore Yeshwanthpur', 'Ludhiana Mandi']
+
+# Mock price data
+MOCK_PRICES = [
+    {'state': 'Punjab', 'APMC': 'Ludhiana Mandi', 'Commodity': 'Wheat', 'Min_Price': 2000, 'Modal_Price': 2150, 'Max_Price': 2300},
+    {'state': 'Haryana', 'APMC': 'Delhi Azadpur', 'Commodity': 'Rice', 'Min_Price': 3000, 'Modal_Price': 3200, 'Max_Price': 3400},
+    {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
+]
 
 # Extract commodity list from website
 def extract_commodity_list():
@@ -50,16 +64,49 @@ def extract_commodity_list():
 
         time.sleep(2)
 
-        dropdown = wait.until(
-            EC.presence_of_element_located((By.ID, "min_max_commodity"))
-        )
+        # dropdown = wait.until(
+        #     EC.presence_of_element_located((By.ID, "min_max_commodity"))
+        # )
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         select = soup.find('select', {'id': 'min_max_commodity'})
         commodities = [option.text for option in select.find_all('option')[2:]]
 
+        dropdown = wait.until(EC.presence_of_element_located((By.ID, "min_max_commodity")))
+        select = Select(dropdown)
+
+        wait.until(lambda d: len(Select(dropdown).options) > 1)
+        select.select_by_visible_text("-- All --")
+        time.sleep(3)
+
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        table = soup.find_all("tbody", class_=lambda c: c and "tbodya" in c)
+        # print(table)
+        data_list = []
+        for tbody in table:
+            rows = tbody.find_all("tr")
+            for row in rows:
+                cols = [col.text.strip() for col in row.find_all("td")]
+                if cols:
+                    data_list.append(cols)
+
+        data_rows = data_list[1:]
+        num_cols = 6
+        data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
+
+        dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        MOCK_STATES=dataframe[['state']].drop_duplicates()
+        MOCK_CROPS=dataframe[['Commodity']].drop_duplicates()
+
+        # dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        
+        # REMOVE THIS LINE: 
+        # unique_pairs = dataframe[['state', 'Commodity']].drop_duplicates()
+        
         driver.quit()
-        return commodities
+        
+        # CHANGE RETURN TO THIS:
+        return dataframe
     except Exception as e:
         print(f"Error extracting commodities: {e}")
         return ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Maize']  # Fallback
@@ -106,6 +153,7 @@ def extract_commodity_data(commodity_name):
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
 
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        
         driver.quit()
 
         return dataframe.to_dict(orient='records')
@@ -127,17 +175,7 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Please login to access this page.'
 login_manager.login_message_category = 'warning'
 
-# Mock data for demonstration
-MOCK_CROPS = extract_commodity_list()
-MOCK_STATES = ['Punjab', 'Haryana', 'Uttar Pradesh', 'Maharashtra', 'Karnataka', 'Tamil Nadu']
-MOCK_MANDIS = ['Delhi Azadpur', 'Mumbai APMC', 'Bangalore Yeshwanthpur', 'Ludhiana Mandi']
 
-# Mock price data
-MOCK_PRICES = [
-    {'state': 'Punjab', 'APMC': 'Ludhiana Mandi', 'Commodity': 'Wheat', 'Min_Price': 2000, 'Modal_Price': 2150, 'Max_Price': 2300},
-    {'state': 'Haryana', 'APMC': 'Delhi Azadpur', 'Commodity': 'Rice', 'Min_Price': 3000, 'Modal_Price': 3200, 'Max_Price': 3400},
-    {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
-]
 current_user={'name':None,"id":None,"is_authenticated":False,'details':None}
 
 @login_manager.user_loader
@@ -164,61 +202,176 @@ def home(current_user=current_user):
 def about():
     return render_template('about.html',current_user=current_user)
 
+# @app.route('/prices', methods=['GET', 'POST'])
+# @app.route('/prices', methods=['GET', 'POST'])
 @app.route('/prices', methods=['GET', 'POST'])
 def prices():
-    prices_data = MOCK_PRICES
-    if request.method == 'POST':
-        
-        commodity_filter = request.form.get('commodity', '')
-        is_commodity = bool(commodity_filter)
-        state_filter = request.form.get('state', '')
-        prices_data = extract_commodity_data(commodity_filter) if is_commodity else []
-    else:
-        commodity_filter = request.args.get('commodity', '')
-        state_filter = request.args.get('state', '')
-
-    is_commodity = bool(commodity_filter)
-
-    # Example dynamic call
+    is_commodity = False
+    # 1. Get the Master Data (The "All Commodities" list)
+    # Since we updated the function, 'master_df' now contains prices too!
+    master_df = extract_commodity_list()
     
-   
+    # 2. Create Mappings (Dropdown Logic)
+    if not master_df.empty:
+        state_to_commodity = master_df.groupby('state')['Commodity'].apply(lambda x: sorted(list(set(x)))).to_dict()
+        commodity_to_state = master_df.groupby('Commodity')['state'].apply(lambda x: sorted(list(set(x)))).to_dict()
+        all_states = sorted(master_df['state'].unique().tolist())
+        all_commodities = sorted(master_df['Commodity'].unique().tolist())
+    else:
+        state_to_commodity = {}
+        commodity_to_state = {}
+        all_states = []
+        all_commodities = []
+
+    # 3. Initialize variables
+    prices_data = [] 
+    commodity_filter = ""
+    state_filter = ""
+
+    if request.method == 'POST':
+        is_commodity=True
+        commodity_filter = request.form.get('commodity', '')
+        state_filter = request.form.get('state', '')
+
+        # --- SCENARIO LOGIC ---
+
+        if commodity_filter:
+            # SCENARIO: Specific Commodity Selected
+            # We scrape fresh data for this specific commodity to get the best details
+            fetched_data = extract_commodity_data(commodity_filter)
+            prices_data = fetched_data # Default to all states for this commodity
+        else:
+            # SCENARIO: "All Commodities" Selected
+            # We use the master_df we already scraped at the start
+            prices_data = master_df.to_dict(orient='records')
+
+        # --- FILTERING BY STATE ---
+        # Now, regardless of whether we got data from 'master_df' or 'extract_commodity_data',
+        # we check if we need to hide other states.
+        
+        if state_filter:
+            # Filter the list to keep only the selected state
+            prices_data = [
+                row for row in prices_data 
+                if row['state'].upper() == state_filter.upper()
+            ]
+            
+    else:
+        # GET request (Page Load)
+        # Show everything by default (or show nothing if you prefer)
+        prices_data = master_df.to_dict(orient='records')
+        is_commodity = False
+
+     # Always show the table
 
     return render_template(
         'prices.html',
         current_user=current_user,
         is_commodity=is_commodity,
-        Commodity=MOCK_CROPS,
-        states=MOCK_STATES,
+        Commodity=all_commodities,
+        states=all_states,
+        state_map=state_to_commodity,
+        commodity_map=commodity_to_state,
         prices=prices_data,
         commodity_filter=commodity_filter,
         state_filter=state_filter
     )
 
 
-
 @app.route('/transport-calculator', methods=['GET', 'POST'])
 def transport_calculator():
-    result = None
-    if request.method == 'POST':
-        # Mock calculation
-        quantity = float(request.form.get('quantity', 0))
-        price = float(request.form.get('price', 0))
-        transport_cost = float(request.form.get('transport_cost', 0))
-        
-        gross_revenue = quantity * price
-        net_revenue = gross_revenue - transport_cost
-        
-        result = {
-            'gross_revenue': gross_revenue,
-            'transport_cost': transport_cost,
-            'net_revenue': net_revenue
-        }
+    # 1. Get Master Data
+    master_df = extract_commodity_list()
     
+    # 2. Data Cleaning (Crucial for Math)
+    # Ensure prices are numbers (remove commas if present)
+    if not master_df.empty:
+        # Convert 'Modal_Price' to numeric, coercing errors to NaN, then fill with 0
+        master_df['Modal_Price'] = pd.to_numeric(master_df['Modal_Price'].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
+        master_df['state'] = master_df['state'].str.upper() # Normalize state names
+    
+    # 3. Create Mappings for Dropdowns & Auto-fill
+    # Map: Crop -> List of Mandis
+    crop_to_mandi = {}
+    if not master_df.empty:
+        crop_to_mandi = master_df.groupby('Commodity')['APMC'].apply(lambda x: sorted(list(set(x)))).to_dict()
+    
+    # Map: Crop -> { Mandi : Price } (For auto-filling price in JS)
+    price_lookup = {}
+    if not master_df.empty:
+        for _, row in master_df.iterrows():
+            crop = row['Commodity']
+            mandi = row['APMC']
+            price = row['Modal_Price']
+            
+            if crop not in price_lookup:
+                price_lookup[crop] = {}
+            price_lookup[crop][mandi] = price
+
+    # Lists for initial dropdowns
+    all_crops = sorted(list(crop_to_mandi.keys()))
+
+    result = None
+    lowest_3_mandis = []
+
+    if request.method == 'POST':
+        try:
+            # Get Form Data
+            selected_crop = request.form.get('crop')
+            selected_mandi = request.form.get('to_mandi')
+            quantity = float(request.form.get('quantity', 0))
+            price = float(request.form.get('price', 0))
+            transport_cost = float(request.form.get('transport_cost', 0))
+            
+            # Calculate
+            gross_revenue = quantity * price
+            net_revenue = gross_revenue - transport_cost
+            
+            result = {
+                'gross_revenue': gross_revenue,
+                'transport_cost': transport_cost,
+                'net_revenue': net_revenue,
+                'selected_crop': selected_crop,
+                'selected_mandi': selected_mandi,
+                'quantity': quantity
+            }
+
+            # Logic for "Compare Other Mandis" (Lowest 3 prices for this crop)
+            if not master_df.empty and selected_crop:
+                # Filter for the selected crop
+                crop_df = master_df[master_df['Commodity'] == selected_crop].copy()
+                
+                # Sort by Price Ascending (Cheapest/Lowest first)
+                crop_df = crop_df.sort_values(by='Modal_Price', ascending=True)
+                
+                # Take top 3
+                top_3_rows = crop_df.head(3).to_dict(orient='records')
+                
+                # Calculate potential revenues for these comparisons
+                # (Assuming same transport cost for comparison purposes, or you can leave blank)
+                for row in top_3_rows:
+                    pot_gross = quantity * row['Modal_Price']
+                    pot_net = pot_gross - transport_cost
+                    
+                    lowest_3_mandis.append({
+                        'APMC': row['APMC'],
+                        'Price': row['Modal_Price'],
+                        'Est_Transport': transport_cost, # Using same transport cost for reference
+                        'Pot_Net': pot_net
+                    })
+
+        except Exception as e:
+            print(f"Calculation Error: {e}")
+            flash("Error in calculation. Please check your inputs.", "danger")
+
     return render_template('transport_calculator.html', 
-                        current_user=current_user,
-                         crops=MOCK_CROPS,
-                         mandis=MOCK_MANDIS,
-                         result=result)
+                           current_user=current_user,
+                           crops=all_crops,
+                           crop_to_mandi=crop_to_mandi, # For JS Dropdown
+                           price_lookup=price_lookup,   # For JS Auto-price
+                           result=result,
+                           lowest_mandis=lowest_3_mandis)
+
 
 @app.route('/compare-region')
 def compare_region():

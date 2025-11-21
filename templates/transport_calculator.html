@@ -6,23 +6,85 @@
 <div class="page-header">
     <div class="container">
         <h1><i class="fas fa-calculator"></i> Transport & Profit Calculator</h1>
-        <p>Calculate your net revenue after transport and commission costs</p>
+        <p>Calculate your net revenue after transport costs</p>
     </div>
 </div>
 
 <section>
     <div class="container">
+        
+        {% if result %}
+        
+        <div class="card mb-3" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+            <h3><i class="fas fa-rupee-sign"></i> Calculation Results</h3>
+            
+            <div style="background-color: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 5px; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <span>Gross Revenue ({{ result.quantity }} Qtl @ ₹{{ result.gross_revenue / result.quantity }}):</span>
+                    <strong style="font-size: 1.2rem;">₹{{ "%.2f"|format(result.gross_revenue) }}</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: rgba(255,255,255,0.8);">
+                    <span>Transport Cost:</span>
+                    <span>- ₹{{ "%.2f"|format(result.transport_cost) }}</span>
+                </div>
+                
+                <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
+                
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 1.1rem;">Net Revenue:</span>
+                    <strong style="font-size: 1.5rem;">₹{{ "%.2f"|format(result.net_revenue) }}</strong>
+                </div>
+            </div>
+            
+            <div style="background-color: rgba(255,255,255,0.9); color: var(--text-dark); padding: 1rem; border-radius: 5px;">
+                <p style="margin: 0;">
+                    <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
+                    <strong>Profit per Quintal: ₹{{ "%.2f"|format(result.net_revenue / result.quantity) }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <h3><i class="fas fa-map-signs"></i> Lowest Prices for {{ result.selected_crop }}</h3>
+            <p style="color: var(--text-light);">Lowest 3 prices found across all markets:</p>
+            
+            <div class="table-container" style="margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mandi</th>
+                            <th>Current Price</th>
+                            <th>Est. Net Revenue*</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in lowest_mandis %}
+                        <tr>
+                            <td>{{ item.APMC }}</td>
+                            <td>₹{{ item.Price }}</td>
+                            <td style="color: var(--primary-color); font-weight: bold;">₹{{ "%.2f"|format(item.Pot_Net) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <small style="color: #777; font-style: italic;">*Estimated Net Revenue calculated using your entered transport cost.</small>
+            </div>
+        </div>
+
+        {% endif %}
+
         <div class="grid grid-2">
-            <!-- Calculator Form -->
             <div class="card">
                 <h3>Enter Your Details</h3>
                 <form method="post" action="/transport-calculator">
+                    
                     <div class="form-group">
                         <label for="crop">Crop <span style="color: red;">*</span></label>
-                        <select id="crop" name="crop" class="form-control" required>
+                        <select id="crop" name="crop" class="form-control" required onchange="filterMandis()">
                             <option value="">Select crop</option>
                             {% for crop in crops %}
-                            <option value="{{ crop }}">{{ crop }}</option>
+                            <option value="{{ crop }}" {% if result and result.selected_crop == crop %}selected{% endif %}>{{ crop }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -30,13 +92,22 @@
                     <div class="form-group">
                         <label for="quantity">Quantity (Quintals) <span style="color: red;">*</span></label>
                         <input type="number" id="quantity" name="quantity" class="form-control" 
-                               step="0.01" min="0" placeholder="e.g., 100" required>
+                               step="0.01" min="0" placeholder="e.g., 100" required
+                               value="{{ result.quantity if result else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="to_mandi">To Mandi <span style="color: red;">*</span></label>
+                        <select id="to_mandi" name="to_mandi" class="form-control" required onchange="autoFillPrice()">
+                            <option value="">Select crop first</option>
+                            </select>
                     </div>
 
                     <div class="form-group">
                         <label for="price">Expected Price (₹/Quintal) <span style="color: red;">*</span></label>
                         <input type="number" id="price" name="price" class="form-control" 
-                               step="1" min="0" placeholder="e.g., 2500" required>
+                               step="1" min="0" placeholder="Auto-filled from Mandi selection" required
+                               value="{{ result.gross_revenue / result.quantity if result else '' }}">
                     </div>
 
                     <div class="form-group">
@@ -46,26 +117,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="to_mandi">To Mandi <span style="color: red;">*</span></label>
-                        <select id="to_mandi" name="to_mandi" class="form-control" required>
-                            <option value="">Select destination mandi</option>
-                            {% for mandi in mandis %}
-                            <option value="{{ mandi }}">{{ mandi }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="form-group">
                         <label for="transport_cost">Transport Cost (₹) <span style="color: red;">*</span></label>
                         <input type="number" id="transport_cost" name="transport_cost" class="form-control" 
-                               step="1" min="0" placeholder="e.g., 5000" required>
+                               step="1" min="0" placeholder="e.g., 5000" required
+                               value="{{ result.transport_cost if result else '' }}">
                     </div>
 
                     <div class="form-group">
-                        <label for="commission">Commission Rate (%)</label>
-                        <input type="number" id="commission" name="commission" class="form-control" 
-                               step="0.1" min="0" max="100" value="2" placeholder="e.g., 2">
-                        <small style="color: var(--text-light);">Typical mandi commission is 1-3%</small>
+                        <small style="color: #d9534f; font-weight: bold;">
+                            * The net revenue value can vary based on the Commission rate of the selected Mandi.
+                        </small>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width: 100%;">
@@ -74,39 +135,8 @@
                 </form>
             </div>
 
-            <!-- Results -->
+            {% if not result %}
             <div>
-                {% if result %}
-                <div class="card" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
-                    <h3><i class="fas fa-rupee-sign"></i> Calculation Results</h3>
-                    
-                    <div style="background-color: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 5px; margin: 1rem 0;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                            <span>Gross Revenue:</span>
-                            <strong style="font-size: 1.2rem;">₹{{ "%.2f"|format(result.gross_revenue) }}</strong>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: rgba(255,255,255,0.8);">
-                            <span>Transport Cost:</span>
-                            <span>- ₹{{ "%.2f"|format(result.transport_cost) }}</span>
-                        </div>
-                        
-                        <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
-                        
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="font-size: 1.1rem;">Net Revenue:</span>
-                            <strong style="font-size: 1.5rem;">₹{{ "%.2f"|format(result.net_revenue) }}</strong>
-                        </div>
-                    </div>
-                    
-                    <div style="background-color: rgba(255,255,255,0.9); color: var(--text-dark); padding: 1rem; border-radius: 5px;">
-                        <p style="margin: 0;">
-                            <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
-                            <strong>Profit per Quintal: ₹{{ "%.2f"|format(result.net_revenue / request.form.get('quantity')|float) }}</strong>
-                        </p>
-                    </div>
-                </div>
-                {% else %}
                 <div class="card">
                     <div style="text-align: center; padding: 2rem;">
                         <i class="fas fa-calculator fa-4x text-primary mb-2"></i>
@@ -118,70 +148,82 @@
                             <ul style="list-style-position: inside; color: var(--text-light);">
                                 <li style="margin-bottom: 0.5rem;">Gross revenue from your produce</li>
                                 <li style="margin-bottom: 0.5rem;">Transport costs to the mandi</li>
-                                <li style="margin-bottom: 0.5rem;">Commission charges</li>
-                                <li style="margin-bottom: 0.5rem;">Net profit after all deductions</li>
+                                <li style="margin-bottom: 0.5rem;">Net profit after deductions</li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                {% endif %}
 
-                <!-- Additional Info -->
                 <div class="card mt-2">
                     <h4><i class="fas fa-lightbulb"></i> Tips for Better Profits</h4>
                     <ul style="color: var(--text-light); line-height: 1.8;">
                         <li>Compare prices across multiple mandis before deciding</li>
                         <li>Consider transport costs - sometimes a lower price nearby is more profitable</li>
                         <li>Check for bulk transport discounts</li>
-                        <li>Time your sales based on seasonal demand</li>
-                        <li>Join farmer cooperatives for better bargaining power</li>
                     </ul>
                 </div>
             </div>
+            {% endif %}
         </div>
 
-        <!-- Alternative Mandis Suggestion -->
-        <div class="card mt-3">
-            <h3><i class="fas fa-map-signs"></i> Compare Other Mandis</h3>
-            <p style="color: var(--text-light);">Consider these alternative mandis for potentially better prices:</p>
-            
-            <div class="table-container" style="margin-top: 1rem;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mandi</th>
-                            <th>Current Price</th>
-                            <th>Est. Transport Cost</th>
-                            <th>Potential Net Revenue</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Delhi Azadpur</td>
-                            <td>₹2,800/Quintal</td>
-                            <td>₹4,500</td>
-                            <td style="color: var(--primary-color); font-weight: bold;">₹2,75,500</td>
-                            <td><button class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Calculate</button></td>
-                        </tr>
-                        <tr>
-                            <td>Ludhiana Mandi</td>
-                            <td>₹2,650/Quintal</td>
-                            <td>₹3,000</td>
-                            <td style="color: var(--primary-color); font-weight: bold;">₹2,62,000</td>
-                            <td><button class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Calculate</button></td>
-                        </tr>
-                        <tr>
-                            <td>Mumbai APMC</td>
-                            <td>₹2,950/Quintal</td>
-                            <td>₹8,000</td>
-                            <td style="color: var(--primary-color); font-weight: bold;">₹2,87,000</td>
-                            <td><button class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Calculate</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 </section>
+
+<script>
+    // 1. Parse Python Data
+    const cropToMandiMap = {{ crop_to_mandi | tojson | safe }};
+    const priceLookup = {{ price_lookup | tojson | safe }};
+    
+    // Pre-select logic if page reloaded after POST
+    const preSelectedMandi = "{{ result.selected_mandi if result else '' }}";
+
+    function filterMandis() {
+        const cropSelect = document.getElementById("crop");
+        const mandiSelect = document.getElementById("to_mandi");
+        const priceInput = document.getElementById("price");
+        const selectedCrop = cropSelect.value;
+
+        // Reset Mandi and Price
+        mandiSelect.innerHTML = '<option value="">Select destination mandi</option>';
+        priceInput.value = "";
+
+        if (selectedCrop && cropToMandiMap[selectedCrop]) {
+            const mandis = cropToMandiMap[selectedCrop];
+            
+            mandis.forEach(mandi => {
+                const option = document.createElement("option");
+                option.value = mandi;
+                option.text = mandi;
+                if (mandi === preSelectedMandi) {
+                    option.selected = true;
+                }
+                mandiSelect.appendChild(option);
+            });
+            
+            // If we just reloaded via POST, allow auto-price to run
+            if (preSelectedMandi) {
+                autoFillPrice();
+            }
+        }
+    }
+
+    function autoFillPrice() {
+        const cropSelect = document.getElementById("crop");
+        const mandiSelect = document.getElementById("to_mandi");
+        const priceInput = document.getElementById("price");
+
+        const crop = cropSelect.value;
+        const mandi = mandiSelect.value;
+
+        if (crop && mandi && priceLookup[crop] && priceLookup[crop][mandi]) {
+            priceInput.value = priceLookup[crop][mandi];
+        }
+    }
+
+    // Run on load in case we are returning from a POST request with data
+    window.onload = function() {
+        filterMandis();
+    };
+</script>
+
 {% endblock %}
