@@ -1,0 +1,11 @@
+StateName,Market,Crops,CalendarDay,Mandi Arrival,Modal Price,Minimum Price,Maximum Price,MandiArrivalUOM,PriceUOM,Source
+Uttar Pradesh,Mathura,Bajra,2025-11,2700,2775.00,2320,2775,Tonne,Rs/Qtl,Agmarknet
+Haryana,Khanina,Bajra,2025-11,2383,1900.00,1850,1900,Tonne,Rs/Qtl,Agmarknet
+Rajasthan,Sikri,Bajra,2025-11,850,2133.53,2070,2200,Tonne,Rs/Qtl,Agmarknet
+Haryana,Jui,Bajra,2025-11,800,1915.00,1900,1950,Tonne,Rs/Qtl,Agmarknet
+Rajasthan,Hindoun,Bajra,2025-11,630,2228.38,1911,2590,Tonne,Rs/Qtl,Agmarknet
+Rajasthan,Sriganganagar (Grain),Bajra,2025-11,611,2090.85,1800,2365,Tonne,Rs/Qtl,Agmarknet
+Uttar Pradesh,Haathras,Bajra,2025-11,540,2439.81,2400,2480,Tonne,Rs/Qtl,Agmarknet
+Haryana,Ellanabad,Bajra,2025-11,473,1900.00,1850,2027,Tonne,Rs/Qtl,Agmarknet
+Haryana,Narnaul,Bajra,2025-11,412,1900.00,1875,1998,Tonne,Rs/Qtl,Agmarknet
+Haryana,Hissar,Bajra,2025-11,410,1978.10,1850,2205,Tonne,Rs/Qtl,Agmarknet

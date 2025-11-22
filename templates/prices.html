@@ -3,6 +3,8 @@
 {% block title %}Market Prices - Krishimitra{% endblock %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="page-header">
     <div class="container">
         <h1><i class="fas fa-chart-line"></i> Market Prices</h1>
@@ -12,13 +14,12 @@
 
 <section>
     <div class="container">
-        <!-- Filters -->
         <div class="card">
             <h3>Filter Prices</h3>
             <form method="post" action="{{ url_for('prices') }}">
                 <div class="grid grid-3">
                     <div class="form-group">
-                        <label for="commodity">commodity</label>
+                        <label for="commodity">Commodity</label>
                         <select id="commodity" name="commodity" class="form-control" onchange="filterStates()">
                             <option value="">All Commodities</option>
                             {% for item in Commodity %}
@@ -26,7 +27,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
                     <div class="form-group">
                         <label for="state">State</label>
                         <select id="state" name="state" class="form-control" onchange="filterCommodities()">
@@ -36,7 +36,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
                     <div class="form-group">
                         <label>&nbsp;</label>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">
@@ -47,7 +46,6 @@
             </form>
         </div>
 
-        <!-- Price Table for single commodity-->
         {% if is_commodity %}
         <div class="table-container">
             <table id="priceTable">
@@ -55,11 +53,10 @@
                     <tr>
                         <th>State</th>
                         <th>APMC</th>
-                        <th>commodity</th>
+                        <th>Commodity</th>
                         <th>Min Price</th>
                         <th>Modal Price</th>
                         <th>Max Price</th>
-                        <th>Transport Cost</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,133 +66,250 @@
                             <td><strong>{{ price.state }}</strong></td>
                             <td>{{ price.APMC }}</td>
                             <td>{{ price.Commodity }}</td>
-                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Min_Price }}</span></td>
-                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Modal_Price }}</span></td>
-                            <td><span style="color: var(--primary-color); font-weight: bold; font-size: 1.1rem;">₹{{ price.Max_Price }}</span></td>
-                            <td>
-                                <a href="/transport-calculator" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">
-                                    <i class="fas fa-calculator"></i> Calculate
-                                </a>
-                            </td>
+                            <td><span style="color: var(--primary-color);">₹{{ price.Min_Price }}</span></td>
+                            <td><span style="color: var(--primary-color); font-weight: bold;">₹{{ price.Modal_Price }}</span></td>
+                            <td><span style="color: var(--primary-color);">₹{{ price.Max_Price }}</span></td>
                         </tr>
                         {% endfor %}
                     {% else %}
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem;">
-                                <i class="fas fa-inbox fa-3x" style="color: var(--text-light); margin-bottom: 1rem;"></i>
-                                <p>No price data available for the selected filters.</p>
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">No data.</td></tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
         {% endif %}
 
-        <!-- Price Trends -->
-        <div class="card mt-3">
-            <h3><i class="fas fa-chart-area"></i> Price Trends</h3>
-            <p style="color: var(--text-light);">Historical price trends will be displayed here once data is integrated.</p>
-            <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
-                <i class="fas fa-chart-line fa-4x" style="color: var(--text-light);"></i>
-                <p style="margin-top: 1rem; color: var(--text-light);">Chart visualization coming soon</p>
+        {% if bar_chart_data %}
+        <div class="grid grid-2 mt-3">
+            <div class="card">
+                <h4><i class="fas fa-map-marker-alt"></i> Cheapest Mandis in {{ bar_chart_data.state_name }}</h4>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="stateBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h4><i class="fas fa-globe-asia"></i> Cheapest Mandis in India</h4>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="nationalBarChart"></canvas>
+                </div>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Quick Actions -->
-        <div class="grid grid-3 mt-3">
-            <div class="card">
-                <i class="fas fa-calculator fa-2x text-primary mb-1"></i>
-                <h4>Transport Calculator</h4>
-                <p>Calculate profit after transport costs</p>
-                <a href="/transport-calculator" class="btn btn-primary">Use Calculator</a>
+        <div class="card mt-3">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3><i class="fas fa-chart-area"></i> Historical Price Trends</h3>
+                {% if chart_data %}
+                <div style="min-width: 200px;">
+                    <select id="chartMarketSelect" class="form-control" onchange="updateHistoricalChart()">
+                        <option value="">-- State vs India Average --</option>
+                        {% for market in chart_data.market_list %}
+                        <option value="{{ market }}">{{ market }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
             </div>
             
-            <div class="card">
-                <i class="fas fa-map-marked-alt fa-2x text-primary mb-1"></i>
-                <h4>Compare Regions</h4>
-                <p>View regional price disparities</p>
-                <a href="/compare-region" class="btn btn-primary">Compare Now</a>
-            </div>
-            
-            <div class="card">
-                <i class="fas fa-upload fa-2x text-primary mb-1"></i>
-                <h4>Submit Your Data</h4>
-                <p>Help improve transparency</p>
-                <a href="/farmer-input" class="btn btn-primary">Contribute</a>
-            </div>
+            {% if chart_data %}
+                <div style="position: relative; height:400px; width:100%">
+                    <canvas id="priceTrendChart"></canvas>
+                </div>
+            {% elif historical_msg %}
+                <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
+                    <p style="margin-top: 1rem; color: #e74c3c; font-weight: bold;">{{ historical_msg }}</p>
+                </div>
+            {% else %}
+                <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
+                    <p style="margin-top: 1rem; color: var(--text-light);">Chart visualization will appear here</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </section>
 
 <script>
-    // Parse the Python dictionaries passed via Jinja
+    // ... (Keep filterCommodities and filterStates functions) ...
     const stateMap = {{ state_map | tojson | safe }};
     const commodityMap = {{ commodity_map | tojson | safe }};
     const allStates = {{ states | tojson | safe }};
     const allCommodities = {{ Commodity | tojson | safe }};
 
-    function filterCommodities() {
-        const stateSelect = document.getElementById("state");
-        const commoditySelect = document.getElementById("commodity");
-        const selectedState = stateSelect.value;
-        const currentCommodity = commoditySelect.value;
+    function filterCommodities() { /* ... existing code ... */ }
+    function filterStates() { /* ... existing code ... */ }
 
-        // Clear current commodity options
-        commoditySelect.innerHTML = '<option value="">All Commodities</option>';
+    // --- NEW: BAR CHART LOGIC ---
+    {% if bar_chart_data %}
+        const barData = {{ bar_chart_data | tojson | safe }};
+        
+        function createComboChart(ctxId, labels, barDataPoints, natAvg, stAvg) {
+            const ctx = document.getElementById(ctxId).getContext('2d');
+            
+            // Create arrays for the average lines (same value repeated)
+            const natAvgArray = Array(labels.length).fill(natAvg);
+            const stAvgArray = Array(labels.length).fill(stAvg);
 
-        let optionsToAdd = [];
-
-        if (selectedState && stateMap[selectedState]) {
-            // If a state is selected, only show commodities for that state
-            optionsToAdd = stateMap[selectedState];
-        } else {
-            // If no state selected, show all commodities
-            optionsToAdd = allCommodities;
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Market Price',
+                            data: barDataPoints,
+                            backgroundColor: 'rgba(46, 204, 113, 0.6)',
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1,
+                            order: 2
+                        },
+                        {
+                            label: 'India Avg (₹' + natAvg + ')',
+                            data: natAvgArray,
+                            type: 'line',
+                            borderColor: '#e74c3c', // Red
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        },
+                        {
+                            label: 'State Avg (₹' + stAvg + ')',
+                            data: stAvgArray,
+                            type: 'line',
+                            borderColor: '#3498db', // Blue
+                            borderWidth: 2,
+                            borderDash: [2, 2],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
         }
 
-        // Populate the dropdown
-        optionsToAdd.forEach(item => {
-            const option = document.createElement("option");
-            option.value = item;
-            option.text = item;
-            if (item === currentCommodity) {
-                option.selected = true;
+        // Initialize the two bar charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. State Chart
+            if(barData.state_chart.labels.length > 0) {
+                createComboChart(
+                    'stateBarChart', 
+                    barData.state_chart.labels, 
+                    barData.state_chart.data, 
+                    barData.national_avg, 
+                    barData.state_avg
+                );
             }
-            commoditySelect.appendChild(option);
+
+            // 2. National Chart
+            createComboChart(
+                'nationalBarChart', 
+                barData.national_chart.labels, 
+                barData.national_chart.data, 
+                barData.national_avg, 
+                barData.state_avg
+            );
         });
-    }
+    {% endif %}
 
-    function filterStates() {
-        const stateSelect = document.getElementById("state");
-        const commoditySelect = document.getElementById("commodity");
-        const selectedCommodity = commoditySelect.value;
-        const currentState = stateSelect.value;
+    // --- HISTORICAL CHART LOGIC (Renamed function to avoid conflicts) ---
+    {% if chart_data %}
+        const chartData = {{ chart_data | tojson | safe }};
+        let histChart = null;
 
-        // Clear current state options
-        stateSelect.innerHTML = '<option value="">All States</option>';
+        function initHistoricalChart() {
+            const ctx = document.getElementById('priceTrendChart').getContext('2d');
+            
+            const initialDatasets = [
+                {
+                    label: 'All India Average',
+                    data: chartData.national,
+                    borderColor: '#95a5a6',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.1
+                },
+                {
+                    label: 'State Average',
+                    data: chartData.state,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.1
+                }
+            ];
 
-        let optionsToAdd = [];
-
-        if (selectedCommodity && commodityMap[selectedCommodity]) {
-            // If a commodity is selected, only show states having that commodity
-            optionsToAdd = commodityMap[selectedCommodity];
-        } else {
-            // If no commodity selected, show all states
-            optionsToAdd = allStates;
+            histChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: initialDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
         }
 
-        // Populate the dropdown
-        optionsToAdd.forEach(state => {
-            const option = document.createElement("option");
-            option.value = state;
-            option.text = state;
-            if (state === currentState) {
-                option.selected = true;
+        function updateHistoricalChart() {
+            const marketSelect = document.getElementById('chartMarketSelect');
+            const selectedMarket = marketSelect.value;
+
+            let newDatasets = [
+                {
+                    label: 'All India Average',
+                    data: chartData.national,
+                    borderColor: '#95a5a6',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.1
+                },
+                {
+                    label: 'State Average',
+                    data: chartData.state,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    fill: !selectedMarket,
+                    tension: 0.1
+                }
+            ];
+
+            if (selectedMarket && chartData.markets[selectedMarket]) {
+                newDatasets.push({
+                    label: selectedMarket + ' Market',
+                    data: chartData.markets[selectedMarket],
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    pointRadius: 4,
+                    tension: 0.1
+                });
             }
-            stateSelect.appendChild(option);
+            histChart.data.datasets = newDatasets;
+            histChart.update();
+        }
+
+        // Add this to the event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            initHistoricalChart();
         });
-    }
+    {% endif %}
 </script>
 
 {% endblock %}

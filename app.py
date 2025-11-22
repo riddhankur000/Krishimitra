@@ -13,13 +13,22 @@ import time
 from selenium.webdriver.chrome.options import Options
 import pandas as pd
 from datetime import datetime
+import matplotlib.pyplot as plt
+import io
+import base64
 from models import db, User, FarmerInput, CommunityPost, MarketPrice
-
+import glob
+import random
+import json
+import numpy as np
 # --- Setup Chrome Driver ---
+
+import matplotlib
+matplotlib.use('Agg') # Prevents GUI errors
 
 chrome_options = Options()
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-chrome_options.add_argument('--headless')  # Run in background
+# chrome_options.add_argument('--headless')  # Run in background
 
 
 # REMOVE: Service(ChromeDriverManager().install())
@@ -44,44 +53,170 @@ MOCK_PRICES = [
     {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
 ]
 
-# Extract commodity list from website
-def extract_commodity_list():
-    try:
-        
-        driver = webdriver.Chrome(service=service, options=chrome_options)
 
+def get_bar_chart_data(master_df, state_name, commodity_name):
+    try:
+        if master_df.empty:
+            return None
+
+        # Clean Data: Convert Price to Numeric
+        # Create a copy to avoid SettingWithCopy warnings on the original master_df
+        df = master_df.copy()
+        df['Modal_Price'] = pd.to_numeric(df['Modal_Price'].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
+        
+        # Standardize strings
+        state_name = state_name.strip().upper()
+        commodity_name = commodity_name.strip() # Case sensitive matching usually required for exact match
+
+        # 1. Filter for Commodity (All India)
+        national_df = df[df['Commodity'] == commodity_name].copy()
+        
+        if national_df.empty:
+            return None
+
+        # Calculate Averages
+        national_avg = round(national_df['Modal_Price'].mean(), 2)
+        
+        # Filter for State
+        state_df = national_df[national_df['state'].str.upper() == state_name].copy()
+        
+        # Handle case where state might not have data for this crop
+        if state_df.empty:
+            state_avg = 0
+            state_top_10 = []
+            state_labels = []
+        else:
+            state_avg = round(state_df['Modal_Price'].mean(), 2)
+            # Get Cheapest 10 in State
+            state_sorted = state_df.sort_values(by='Modal_Price', ascending=True).head(10)
+            state_labels = state_sorted['APMC'].tolist()
+            state_top_10 = state_sorted['Modal_Price'].tolist()
+
+        # Get Cheapest 10 in India
+        national_sorted = national_df.sort_values(by='Modal_Price', ascending=True).head(10)
+        national_labels = national_sorted.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
+        national_top_10 = national_sorted['Modal_Price'].tolist()
+
+        return {
+            "state_name": state_name,
+            "national_avg": national_avg,
+            "state_avg": state_avg,
+            "state_chart": {
+                "labels": state_labels,
+                "data": state_top_10
+            },
+            "national_chart": {
+                "labels": national_labels,
+                "data": national_top_10
+            }
+        }
+
+    except Exception as e:
+        print(f"Bar Chart Data Error: {e}")
+        return None
+
+# --- Helper Function to Generate Historical Graph ---
+def get_historical_data(state_name, commodity_name):
+    try:
+        csv_path = 'D:/STUDY/IITB MS/CS 699/project/krishimitra/data/agmarknet_india_historical_prices_2024_2025.csv' 
+        if not os.path.exists(csv_path):
+            return None, "Dataset not found."
+
+        df = pd.read_csv(csv_path)
+
+        # Standardize text
+        state_name = state_name.strip().lower()
+        commodity_name = commodity_name.strip().lower()
+        
+        # Clean Data
+        df['State'] = df['State'].str.strip()
+        df['Commodity'] = df['Commodity'].str.strip()
+        df['Price Date'] = pd.to_datetime(df['Price Date'], format='%d %b %Y', errors='coerce')
+        df = df.sort_values('Price Date')
+        
+        # Create Month Column (YYYY-MM) for grouping
+        df['Month'] = df['Price Date'].dt.to_period('M').astype(str)
+
+        # 1. Filter for Specific Crop (All India)
+        crop_df = df[df['Commodity'].str.lower() == commodity_name].copy()
+        
+        if crop_df.empty:
+            return None, "Historical Price for this crop is not available"
+
+        # 2. Calculate National Average (All India Trend)
+        national_avg = crop_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
+
+        # 3. Filter for Specific State
+        state_df = crop_df[crop_df['State'].str.lower() == state_name].copy()
+        
+        if state_df.empty:
+            return None, f"No data found for {commodity_name} in {state_name}"
+
+        # 4. Calculate State Average
+        state_avg = state_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
+
+        # 5. Prepare Market-wise Data
+        market_data = {}
+        unique_markets = state_df['Market Name'].unique()
+        
+        for market in unique_markets:
+            m_df = state_df[state_df['Market Name'] == market]
+            m_avg = m_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
+            # Convert to dict mapping Month -> Price
+            market_data[market] = m_avg.to_dict()
+
+        # 6. Consolidate all unique months (Labels)
+        all_months = sorted(list(set(national_avg.index) | set(state_avg.index)))
+
+        # 7. Align Data to Labels (Fill missing months with None)
+        def align_data(source_series, labels):
+            return [source_series.get(month, None) for month in labels]
+
+        final_data = {
+            "labels": all_months,
+            "national": align_data(national_avg, all_months),
+            "state": align_data(state_avg, all_months),
+            "markets": {},
+            "market_list": sorted(unique_markets.tolist()),
+            "state_name": state_name.title(),
+            "commodity_name": commodity_name.title()
+        }
+
+        for market, data_dict in market_data.items():
+            # Manually align market dictionary to the master month list
+            aligned_market = [data_dict.get(month, None) for month in all_months]
+            final_data["markets"][market] = aligned_market
+
+        return final_data, None
+
+    except Exception as e:
+        print(f"Data Error: {e}")
+        return None, "Error processing data"
+    
+
+# ... (Keep your extract_commodity_list and extract_commodity_data functions EXACTLY as they were) ...
+def extract_commodity_list():
+    # ... [Insert your existing extraction code here] ...
+    # For brevity I am assuming you keep the code you provided previously
+    try:
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         url = 'https://enam.gov.in/web/dashboard/live_price'
         driver.get(url)
-
         wait = WebDriverWait(driver, 20)
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-
-        commodity_radio = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']"))
-        )
+        commodity_radio = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']")))
         driver.execute_script("arguments[0].scrollIntoView(true);", commodity_radio)
         commodity_radio.click()
-
         time.sleep(2)
-
-        # dropdown = wait.until(
-        #     EC.presence_of_element_located((By.ID, "min_max_commodity"))
-        # )
-
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         select = soup.find('select', {'id': 'min_max_commodity'})
-        commodities = [option.text for option in select.find_all('option')[2:]]
-
         dropdown = wait.until(EC.presence_of_element_located((By.ID, "min_max_commodity")))
         select = Select(dropdown)
-
         wait.until(lambda d: len(Select(dropdown).options) > 1)
         select.select_by_visible_text("-- All --")
         time.sleep(3)
-
         soup = BeautifulSoup(driver.page_source, "html.parser")
         table = soup.find_all("tbody", class_=lambda c: c and "tbodya" in c)
-        # print(table)
         data_list = []
         for tbody in table:
             rows = tbody.find_all("tr")
@@ -89,57 +224,35 @@ def extract_commodity_list():
                 cols = [col.text.strip() for col in row.find_all("td")]
                 if cols:
                     data_list.append(cols)
-
         data_rows = data_list[1:]
         num_cols = 6
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
-
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
-        MOCK_STATES=dataframe[['state']].drop_duplicates()
-        MOCK_CROPS=dataframe[['Commodity']].drop_duplicates()
-
-        # dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
-        
-        # REMOVE THIS LINE: 
-        # unique_pairs = dataframe[['state', 'Commodity']].drop_duplicates()
-        
         driver.quit()
-        
-        # CHANGE RETURN TO THIS:
         return dataframe
     except Exception as e:
-        print(f"Error extracting commodities: {e}")
-        return ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Maize']  # Fallback
+        print(f"Error: {e}")
+        return pd.DataFrame()
 
 def extract_commodity_data(commodity_name):
+    # ... [Keep your existing code here] ...
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
-
         url = 'https://enam.gov.in/web/dashboard/live_price'
         driver.get(url)
-
         wait = WebDriverWait(driver, 20)
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-
-        commodity_radio = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']"))
-        )
+        commodity_radio = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']")))
         driver.execute_script("arguments[0].scrollIntoView(true);", commodity_radio)
         commodity_radio.click()
-
         time.sleep(3)
-
         dropdown = wait.until(EC.presence_of_element_located((By.ID, "min_max_commodity")))
         select = Select(dropdown)
-
         wait.until(lambda d: len(Select(dropdown).options) > 1)
         select.select_by_visible_text(commodity_name)
-
         time.sleep(3)
-
         soup = BeautifulSoup(driver.page_source, "html.parser")
         table = soup.find_all("tbody", class_=lambda c: c and "tbodya" in c)
-
         data_list = []
         for tbody in table:
             rows = tbody.find_all("tr")
@@ -147,19 +260,16 @@ def extract_commodity_data(commodity_name):
                 cols = [col.text.strip() for col in row.find_all("td")]
                 if cols:
                     data_list.append(cols)
-
         data_rows = data_list[1:]
         num_cols = 6
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
-
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
-        
         driver.quit()
-
         return dataframe.to_dict(orient='records')
     except Exception as e:
-        print(f"Error extracting data: {e}")
+        print(f"Error: {e}")
         return []
+    
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -206,12 +316,9 @@ def about():
 # @app.route('/prices', methods=['GET', 'POST'])
 @app.route('/prices', methods=['GET', 'POST'])
 def prices():
-    is_commodity = False
-    # 1. Get the Master Data (The "All Commodities" list)
-    # Since we updated the function, 'master_df' now contains prices too!
+    # 1. Get Master Data
     master_df = extract_commodity_list()
     
-    # 2. Create Mappings (Dropdown Logic)
     if not master_df.empty:
         state_to_commodity = master_df.groupby('state')['Commodity'].apply(lambda x: sorted(list(set(x)))).to_dict()
         commodity_to_state = master_df.groupby('Commodity')['state'].apply(lambda x: sorted(list(set(x)))).to_dict()
@@ -223,46 +330,46 @@ def prices():
         all_states = []
         all_commodities = []
 
-    # 3. Initialize variables
     prices_data = [] 
     commodity_filter = ""
     state_filter = ""
+    
+    # Variables for Charts
+    historical_chart_data = None
+    bar_chart_data = None  # <--- NEW
+    historical_msg = None
+    is_commodity = False
 
     if request.method == 'POST':
-        is_commodity=True
+        is_commodity = True
         commodity_filter = request.form.get('commodity', '')
         state_filter = request.form.get('state', '')
 
-        # --- SCENARIO LOGIC ---
-
+        # Real Time Table Data
         if commodity_filter:
-            # SCENARIO: Specific Commodity Selected
-            # We scrape fresh data for this specific commodity to get the best details
-            fetched_data = extract_commodity_data(commodity_filter)
-            prices_data = fetched_data # Default to all states for this commodity
+            prices_data= (master_df.loc[master_df['Commodity'] == commodity_filter]).to_dict(orient='records')
+
+            # prices_data = extract_commodity_data(commodity_filter)
         else:
-            # SCENARIO: "All Commodities" Selected
-            # We use the master_df we already scraped at the start
             prices_data = master_df.to_dict(orient='records')
 
-        # --- FILTERING BY STATE ---
-        # Now, regardless of whether we got data from 'master_df' or 'extract_commodity_data',
-        # we check if we need to hide other states.
-        
         if state_filter:
-            # Filter the list to keep only the selected state
-            prices_data = [
-                row for row in prices_data 
-                if row['state'].upper() == state_filter.upper()
-            ]
+            prices_data = [row for row in prices_data if row['state'].upper() == state_filter.upper()]
+
+        # --- CHART LOGIC ---
+        if commodity_filter and state_filter:
+            # 1. Historical Line Chart (Your existing logic)
+            historical_chart_data, historical_msg = get_historical_data(state_filter, commodity_filter)
+            
+            # 2. Bar Charts (New logic using master_df from live scrape)
+            bar_chart_data = get_bar_chart_data(master_df, state_filter, commodity_filter)
+            
+        elif commodity_filter or state_filter:
+            historical_msg = "Please select both State and Commodity to view charts."
             
     else:
-        # GET request (Page Load)
-        # Show everything by default (or show nothing if you prefer)
         prices_data = master_df.to_dict(orient='records')
         is_commodity = False
-
-     # Always show the table
 
     return render_template(
         'prices.html',
@@ -274,9 +381,13 @@ def prices():
         commodity_map=commodity_to_state,
         prices=prices_data,
         commodity_filter=commodity_filter,
-        state_filter=state_filter
+        state_filter=state_filter,
+        
+        # Pass Chart Data
+        chart_data=historical_chart_data,
+        bar_chart_data=bar_chart_data, # <--- NEW
+        historical_msg=historical_msg
     )
-
 
 @app.route('/transport-calculator', methods=['GET', 'POST'])
 def transport_calculator():
