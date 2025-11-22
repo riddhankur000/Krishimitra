@@ -3,291 +3,664 @@
 {% block title %}Transport & Profit Calculator - Krishimitra{% endblock %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 <div class="page-header">
     <div class="container">
-        <h1><i class="fas fa-calculator"></i> Transport & Profit Calculator</h1>
-        <p>Calculate your net revenue after transport costs</p>
+        <h1><i class="fas fa-truck-moving"></i> Smart Transport Calculator</h1>
+        <p>Optimize your logistics with real-time distance & price analysis</p>
     </div>
 </div>
 
 <section>
-    <div class="container" style="align-items: center; max-width: 1600;">
+    <div class="container" style="max-width: 1600px;">
         
     {% if show_calc %}
-        <div class="inner_container" style="display: flex; justify-content: center; margin-left: -50px; margin-right: -50px;">
+        <div class="inner_container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
 
-        <div style="margin: 50px; width: 38vw;">
-        <div class="card mb-3" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
-            <h3 style="color: white;"><i class="fas fa-rupee-sign" style="color:aliceblue"></i> Calculation Results</h3>
-            
-            <div style="background-color: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 5px; margin: 1rem 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                    <span>Gross Revenue ({{ result.quantity }} Qtl @ ₹{{ result.gross_revenue / result.quantity }}):</span>
-                    <strong style="font-size: 1.2rem;">₹{{ "%.2f"|format(result.gross_revenue) }}</strong>
-                </div>
+            <!-- NET REVENUE CARD -->
+            <div class="card mb-3" style="flex: 1; min-width: 300px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                <h3 style="color: white;"><i class="fas fa-rupee-sign"></i> Net Revenue</h3>
                 
-                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: rgba(255,255,255,0.8);">
-                    <span>Transport Cost:</span>
-                    <span>- ₹{{ "%.2f"|format(result.transport_cost) }}</span>
-                </div>
-                
-                <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
-                
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 1.1rem;">Net Revenue:</span>
-                    <strong style="font-size: 1.5rem;">₹{{ "%.2f"|format(result.net_revenue) }}</strong>
-                </div>
-            </div>
-            
-            <div style="background-color: rgba(255,255,255,0.9); color: var(--text-dark); padding: 1rem; border-radius: 5px;">
-                <p style="margin: 0;">
-                    <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
-                    <strong>Profit per Quintal: ₹{{ "%.2f"|format(result.net_revenue / result.quantity) }}</strong>
-                </p>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <h3><i class="fas fa-map-signs"></i> Lowest Prices for {{ result.selected_crop }}</h3>
-            <p style="color: var(--text-light);">Lowest 3 prices found across all markets:</p>
-            
-            <div class="table-container" style="margin-top: 1rem;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mandi</th>
-                            <th>Current Price</th>
-                            <th>Est. Net Revenue*</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in lowest_mandis %}
-                        <tr>
-                            <td>{{ item.APMC }}</td>
-                            <td>₹{{ item.Price }}</td>
-                            <td style="color: var(--primary-color); font-weight: bold;">₹{{ "%.2f"|format(item.Pot_Net) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <small style="color: #777; font-style: italic;">*Estimated Net Revenue calculated using your entered transport cost.</small>
-            </div>
-        </div>
-        </div>
-
-        <div class="card" style="margin: 50px; width: 40vw;">
-                <h3>Enter Your Details</h3>
-                <form method="post" action="/transport-calculator">
+                <div style="background-color: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Gross Revenue:</span>
+                        <strong style="font-size: 1.1rem;">₹{{ "%.2f"|format(result.gross_revenue) }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.9;">
+                        <span>({{ result.quantity }} Qtl @ ₹{{ "%.2f"|format(result.gross_revenue / result.quantity) }})</span>
+                    </div>
                     
-                    <div class="form-group">
-                        <label for="crop">Crop <span style="color: red;">*</span></label>
-                        <select id="crop" name="crop" class="form-control" required onchange="filterMandis()">
-                            <option value="">Select crop</option>
-                            {% for crop in crops %}
-                            <option value="{{ crop }}" {% if result and result.selected_crop == crop %}selected{% endif %}>{{ crop }}</option>
-                            {% endfor %}
-                        </select>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: #ffcccc;">
+                        <span>Transport Cost:</span>
+                        <span>- ₹{{ "%.2f"|format(result.transport_cost) }}</span>
                     </div>
-
-                    <div class="form-group">
-                        <label for="quantity">Quantity (Quintals) <span style="color: red;">*</span></label>
-                        <input type="number" id="quantity" name="quantity" class="form-control" 
-                               step="0.01" min="0" placeholder="e.g., 100" required
-                               value="{{ result.quantity if result else '' }}">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.8rem; opacity: 0.8;">
+                        <span>({{ result.distance }} km @ ₹{{ result.rate_per_km }}/km)</span>
                     </div>
-
-                    <div class="form-group">
-                        <label for="to_mandi">To Mandi <span style="color: red;">*</span></label>
-                        <select id="to_mandi" name="to_mandi" class="form-control" required onchange="autoFillPrice()">
-                            <option value="">Select crop first</option>
-                            </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="price">Expected Price (₹/Quintal) <span style="color: red;">*</span></label>
-                        <input type="number" id="price" name="price" class="form-control" 
-                               step="1" min="0" placeholder="Auto-filled from Mandi selection" required
-                               value="{{ result.gross_revenue / result.quantity if result else '' }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="from_location">From Location</label>
-                        <input type="text" id="from_location" name="from_location" class="form-control" 
-                               placeholder="Your farm location">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="transport_cost">Transport Cost (₹) <span style="color: red;">*</span></label>
-                        <input type="number" id="transport_cost" name="transport_cost" class="form-control" 
-                               step="1" min="0" placeholder="e.g., 5000" required
-                               value="{{ result.transport_cost if result else '' }}">
-                    </div>
-
-                    <div class="form-group">
-                        <small style="color: #d9534f; font-weight: bold;">
-                            * The net revenue value can vary based on the Commission rate of the selected Mandi.
-                        </small>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-calculator"></i> Calculate Net Revenue
-                    </button>
-                </form>
-            </div>
-            </div>
-        {% else %}
-
-        <div class="grid grid-2">
-            <div class="card">
-                <h3>Enter Your Details</h3>
-                <form method="post" action="/transport-calculator">
                     
-                    <div class="form-group">
-                        <label for="crop">Crop <span style="color: red;">*</span></label>
-                        <select id="crop" name="crop" class="form-control" required onchange="filterMandis()">
-                            <option value="">Select crop</option>
-                            {% for crop in crops %}
-                            <option value="{{ crop }}" {% if result and result.selected_crop == crop %}selected{% endif %}>{{ crop }}</option>
-                            {% endfor %}
-                        </select>
+                    <hr style="border-color: rgba(255,255,255,0.3);">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.2rem;">Net Profit:</span>
+                        <strong style="font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">₹{{ "%.2f"|format(result.net_revenue) }}</strong>
                     </div>
-
-                    <div class="form-group">
-                        <label for="quantity">Quantity (Quintals) <span style="color: red;">*</span></label>
-                        <input type="number" id="quantity" name="quantity" class="form-control" 
-                               step="0.01" min="0" placeholder="e.g., 100" required
-                               value="{{ result.quantity if result else '' }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="to_mandi">To Mandi <span style="color: red;">*</span></label>
-                        <select id="to_mandi" name="to_mandi" class="form-control" required onchange="autoFillPrice()">
-                            <option value="">Select crop first</option>
-                            </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="price">Expected Price (₹/Quintal) <span style="color: red;">*</span></label>
-                        <input type="number" id="price" name="price" class="form-control" 
-                               step="1" min="0" placeholder="Auto-filled from Mandi selection" required
-                               value="{{ result.gross_revenue / result.quantity if result else '' }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="from_location">From Location</label>
-                        <input type="text" id="from_location" name="from_location" class="form-control" 
-                               placeholder="Your farm location">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="transport_cost">Transport Cost (₹) <span style="color: red;">*</span></label>
-                        <input type="number" id="transport_cost" name="transport_cost" class="form-control" 
-                               step="1" min="0" placeholder="e.g., 5000" required
-                               value="{{ result.transport_cost if result else '' }}">
-                    </div>
-
-                    <div class="form-group">
-                        <small style="color: #d9534f; font-weight: bold;">
-                            * The net revenue value can vary based on the Commission rate of the selected Mandi.
-                        </small>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-calculator"></i> Calculate Net Revenue
-                    </button>
-                </form>
+                </div>
+                
+                <div style="background-color: white; color: var(--text-dark); padding: 0.8rem; border-radius: 5px; text-align: center;">
+                    <strong>Profit per Quintal: ₹{{ "%.2f"|format(result.profit_per_qtl) }}</strong>
+                </div>
             </div>
 
-            
-            <div>
-                <div class="card">
-                    <div style="text-align: center; padding: 2rem;">
-                        <i class="fas fa-calculator fa-4x text-primary mb-2"></i>
-                        <h3>How It Works</h3>
-                        <p style="color: var(--text-light); margin: 1rem 0;">Fill in the form to calculate your potential profit from selling your produce at different mandis.</p>
-                        
-                        <div style="text-align: left; margin-top: 2rem;">
-                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">What we calculate:</h4>
-                            <ul style="list-style-position: inside; color: var(--text-light);">
-                                <li style="margin-bottom: 0.5rem;">Gross revenue from your produce</li>
-                                <li style="margin-bottom: 0.5rem;">Transport costs to the mandi</li>
-                                <li style="margin-bottom: 0.5rem;">Net profit after deductions</li>
-                            </ul>
+            <!-- CHARTS CARD -->
+            <div class="card" style="flex: 2; min-width: 400px;">
+                <h3><i class="fas fa-chart-bar"></i> Top Markets Analysis (Revenue)</h3>
+                
+                <!-- DEBUG INFO (Remove after testing) -->
+                {% if chart_data %}
+                <!-- <div style="background: #f0f0f0; padding: 10px; margin: 20px 0; font-family: monospace; font-size: 12px;">
+                    <strong>DEBUG INFO:</strong><br>
+                    chart_data exists: {{ chart_data is not none }}<br>
+                    india_labels: {{ chart_data.india_labels }}<br>
+                    india_data: {{ chart_data.india_data }}<br>
+                    state_labels: {{ chart_data.state_labels }}<br>
+                    state_data: {{ chart_data.state_data }}<br>
+                </div> -->
+                {% endif %}
+                
+                {% if chart_data and chart_data.india_data %}
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    
+                    <div style="flex: 1; min-width: 300px;">
+                        <h5 style="text-align: center; color: #555; font-size: 0.9rem;">Top 5 Revenue in India</h5>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="indiaChart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; min-width: 300px;">
+                        <h5 style="text-align: center; color: #555; font-size: 0.9rem;">Top 5 Revenue in {{ chart_data.state_name }}</h5>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="stateChart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+                {% else %}
+                <div style="padding: 20px; text-align: center; color: #999;">
+                    <p>No chart data available. Please ensure:</p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>✓ Crop is selected</li>
+                        <li>✓ State/Mandi is selected</li>
+                        <li>✓ Data exists for this combination</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+
+
+            <!-- OPPORTUNITIES TABLE -->
+            <div class="card" style="width: 100%;">
+                <h3><i class="fas fa-list-ol"></i> Highest Price Opportunities - Detailed Analysis</h3>
+                <div class="grid grid-2">
+                    <!-- ALL INDIA TOP 5 -->
+                    <div>
+                        <h5 style="color: var(--primary-color);">All India Top 5</h5>
+                        <div style="overflow-x: auto;">
+                            <table class="table-sm" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Mandi</th>
+                                        <th>Distance<br><small>(km)</small></th>
+                                        <th>Transport<br><small>(₹)</small></th>
+                                        <th>Price/Qtl<br><small>(₹)</small></th>
+                                        <th>Gross Rev<br><small>(₹)</small></th>
+                                        <th style="background: #e8f5e9;">Net Revenue<br><small>(₹)</small></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in top_5_india %}
+                                    <tr>
+                                        <td style="font-weight: 500;">{{ item.APMC }}</td>
+                                        <td>
+                                            <span id="dist-india-{{ loop.index0 }}" class="distance-cell">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span id="tcost-india-{{ loop.index0 }}" class="tcost-cell">
+                                                -
+                                            </span>
+                                        </td>
+                                        <td>₹{{ item.Price }}</td>
+                                        <td>₹{{ "%.0f"|format(item.Gross_Rev) }}</td>
+                                        <td style="background: #e8f5e9;">
+                                            <strong id="net-india-{{ loop.index0 }}" class="net-cell">
+                                                -
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- STATE TOP 5 -->
+                    <div>
+                        <h5 style="color: var(--primary-color);">{{ chart_data.state_name if chart_data else 'State' }} Top 5</h5>
+                        {% if top_5_state %}
+                        <div style="overflow-x: auto;">
+                            <table class="table-sm" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Mandi</th>
+                                        <th>Distance<br><small>(km)</small></th>
+                                        <th>Transport<br><small>(₹)</small></th>
+                                        <th>Price/Qtl<br><small>(₹)</small></th>
+                                        <th>Gross Rev<br><small>(₹)</small></th>
+                                        <th style="background: #e8f5e9;">Net Revenue<br><small>(₹)</small></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in top_5_state %}
+                                    <tr>
+                                        <td style="font-weight: 500;">{{ item.APMC }}</td>
+                                        <td>
+                                            <span id="dist-state-{{ loop.index0 }}" class="distance-cell">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span id="tcost-state-{{ loop.index0 }}" class="tcost-cell">
+                                                -
+                                            </span>
+                                        </td>
+                                        <td>₹{{ item.Price }}</td>
+                                        <td>₹{{ "%.0f"|format(item.Gross_Rev) }}</td>
+                                        <td style="background: #e8f5e9;">
+                                            <strong id="net-state-{{ loop.index0 }}" class="net-cell">
+                                                -
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p style="padding: 20px; text-align: center; color: #999;">No data available for this state.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 5px; font-size: 0.85rem; border-left: 4px solid var(--primary-color);">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                        <div>
+                            <i class="fas fa-map-marker-alt"></i> <strong>From:</strong> {{ result.from_location if result else 'Your Location' }}
+                        </div>
+                        <div>
+                            <i class="fas fa-truck"></i> <strong>Rate:</strong> ₹{{ result.rate_per_km if result else '25' }}/km
+                        </div>
+                        <div>
+                            <i class="fas fa-box"></i> <strong>Quantity:</strong> {{ result.quantity if result else '0' }} Qtl
+                        </div>
+                        <div style="margin-left: auto; color: #1976d2; font-weight: 600;">
+                            <i class="fas fa-lightbulb"></i> Net Revenue = Gross Revenue - Transport Cost
                         </div>
                     </div>
                 </div>
-
-                <div class="card mt-2">
-                    <h4><i class="fas fa-lightbulb"></i> Tips for Better Profits</h4>
-                    <ul style="color: var(--text-light); line-height: 1.8;">
-                        <li>Compare prices across multiple mandis before deciding</li>
-                        <li>Consider transport costs - sometimes a lower price nearby is more profitable</li>
-                        <li>Check for bulk transport discounts</li>
-                    </ul>
-                </div>
             </div>
             
+            <div style="width: 100%; text-align: center; margin-top: 20px;">
+                <a href="/transport-calculator" class="btn btn-secondary">Calculate New Crop</a>
+            </div>
         </div>
-        {% endif %}
+
+    {% else %}
+        <!-- INPUT FORM -->
+        <div class="grid grid-2">
+            <div class="card">
+                <h3><i class="fas fa-edit"></i> Enter Details</h3>
+                <form method="post" action="/transport-calculator" id="calcForm">
+                    <div class="form-group">
+                        <label for="from_location">Your Location (Village/City) <span style="color: red;">*</span></label>
+                        <input type="text" id="from_location" name="from_location" class="form-control" 
+                               placeholder="e.g. Rampur, Uttar Pradesh" required
+                               value="{{ result.from_location if result else '' }}">
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="crop">Crop <span style="color: red;">*</span></label>
+                            <select id="crop" name="crop" class="form-control" required onchange="filterMandis()">
+                                <option value="">Select crop</option>
+                                {% for crop in crops %}
+                                <option value="{{ crop }}" {% if result and result.selected_crop == crop %}selected{% endif %}>{{ crop }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantity (Qtl) <span style="color: red;">*</span></label>
+                            <input type="number" id="quantity" name="quantity" class="form-control" 
+                                   step="0.01" min="0" placeholder="100" required
+                                   value="{{ result.quantity if result else '' }}">
+                        </div>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="to_mandi">To Mandi <span style="color: red;">*</span></label>
+                            <select id="to_mandi" name="to_mandi" class="form-control" required onchange="autoFillPrice()">
+                                <option value="">Select crop first</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Expected Price (₹) <span style="color: red;">*</span></label>
+                            <input type="number" id="price" name="price" class="form-control" 
+                                   step="1" min="0" placeholder="Auto-filled" required
+                                   value="{{ result.gross_revenue / result.quantity if result else '' }}">
+                        </div>
+                    </div>
+                    <hr>
+                    <h5 style="color: var(--text-light);">Transport Logistics</h5>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="rate_per_km">Cost per KM (₹) <span style="color: red;">*</span></label>
+                            <input type="number" id="rate_per_km" name="rate_per_km" class="form-control" 
+                                   step="0.1" min="0" placeholder="e.g. 30" required
+                                   value="{{ result.rate_per_km if result else '25' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="distance">Total Distance (KM)</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" id="distance" name="distance" class="form-control" 
+                                       step="0.1" min="0" placeholder="0" required
+                                       value="{{ result.distance if result else '' }}">
+                                <button type="button" class="btn btn-secondary" onclick="calculateDistance()" title="Auto Calculate Distance" style="padding: 0 15px;">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                            </div>
+                            <small id="distMsg" style="font-size: 0.8rem; color: #666;"></small>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        <i class="fas fa-calculator"></i> Calculate Profit
+                    </button>
+                </form>
+            </div>
+            <div>
+                <div class="card">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-route fa-4x text-primary mb-2"></i>
+                        <h3>Smart Transport Calculator</h3>
+                        <p style="color: var(--text-light);">We calculate the exact distance from your farm to the selected Mandi to give you the real net profit.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
     </div>
 </section>
 
 <script>
-    // 1. Parse Python Data
+    // Common Data
     const cropToMandiMap = {{ crop_to_mandi | tojson | safe }};
     const priceLookup = {{ price_lookup | tojson | safe }};
-    
-    // Pre-select logic if page reloaded after POST
     const preSelectedMandi = "{{ result.selected_mandi if result else '' }}";
 
+    // --- HELPER FUNCTIONS ---
     function filterMandis() {
         const cropSelect = document.getElementById("crop");
+        if (!cropSelect) return;
+
         const mandiSelect = document.getElementById("to_mandi");
         const priceInput = document.getElementById("price");
         const selectedCrop = cropSelect.value;
 
-        // Reset Mandi and Price
         mandiSelect.innerHTML = '<option value="">Select destination mandi</option>';
         priceInput.value = "";
 
         if (selectedCrop && cropToMandiMap[selectedCrop]) {
             const mandis = cropToMandiMap[selectedCrop];
-            
             mandis.forEach(mandi => {
                 const option = document.createElement("option");
                 option.value = mandi;
-                option.text = mandi// Add state info
-                // print(mandi_to_state);
-                if (mandi === preSelectedMandi) {
-                    option.selected = true;
-                }
+                option.text = mandi; 
+                if (mandi === preSelectedMandi) { option.selected = true; }
                 mandiSelect.appendChild(option);
             });
-            
-            // If we just reloaded via POST, allow auto-price to run
-            if (preSelectedMandi) {
-                autoFillPrice();
-            }
+            if (preSelectedMandi) autoFillPrice();
         }
     }
 
     function autoFillPrice() {
-        const cropSelect = document.getElementById("crop");
-        const mandiSelect = document.getElementById("to_mandi");
+        const crop = document.getElementById("crop");
+        if (!crop) return;
+
+        const mandi = document.getElementById("to_mandi").value;
         const priceInput = document.getElementById("price");
-
-        const crop = cropSelect.value;
-        const mandi = mandiSelect.value;
-
-        if (crop && mandi && priceLookup[crop] && priceLookup[crop][mandi]) {
-            priceInput.value = priceLookup[crop][mandi];
+        
+        if (crop.value && mandi && priceLookup[crop.value] && priceLookup[crop.value][mandi]) {
+            priceInput.value = priceLookup[crop.value][mandi];
         }
     }
 
-    // Run on load in case we are returning from a POST request with data
-    window.onload = function() {
-        filterMandis();
+    async function getCoords(query) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return (data && data.length > 0) ? { lat: data[0].lat, lon: data[0].lon } : null;
+        } catch (e) { console.error(e); return null; }
+    }
+
+    async function calculateDistance() {
+        const fromLoc = document.getElementById('from_location').value;
+        const toMandi = document.getElementById('to_mandi').value;
+        const distInput = document.getElementById('distance');
+        const msgSpan = document.getElementById('distMsg');
+
+        if (!fromLoc || !toMandi) { alert("Enter location and select Mandi."); return; }
+        msgSpan.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Calculating...";
+        
+        const startCoords = await getCoords(fromLoc);
+        const endCoords = await getCoords(toMandi);
+
+        if (!startCoords || !endCoords) { msgSpan.innerHTML = "<span style='color:red'>Loc not found</span>"; return; }
+
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lon},${startCoords.lat};${endCoords.lon},${endCoords.lat}?overview=false`;
+        try {
+            const response = await fetch(osrmUrl);
+            const data = await response.json();
+            if (data.code === 'Ok') {
+                distInput.value = (data.routes[0].distance / 1000).toFixed(1);
+                msgSpan.innerHTML = "<span style='color:green'>Done!</span>";
+            }
+        } catch (e) { msgSpan.innerHTML = "API Error"; }
+    }
+
+    // Helper function to format numbers with Indian commas
+    function formatNumber(num) {
+        return parseFloat(num).toLocaleString('en-IN');
+    }
+
+    // --- CHART RENDERING LOGIC ---
+    {% if chart_data %}
+    // Store chart data in global variable
+    const chartData = {
+        india_labels: {{ chart_data.india_labels | tojson | safe }},
+        india_data: {{ chart_data.india_data | tojson | safe }},
+        state_labels: {{ chart_data.state_labels | tojson | safe }},
+        state_data: {{ chart_data.state_data | tojson | safe }},
+        state_name: "{{ chart_data.state_name }}"
     };
+
+    function renderChart(canvasId, labels, data, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error("Canvas not found:", canvasId);
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (window[canvasId + '_instance']) {
+            window[canvasId + '_instance'].destroy();
+        }
+        
+        window[canvasId + '_instance'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Est. Revenue (₹)',
+                    data: data,
+                    backgroundColor: color,
+                    borderColor: color.replace('0.8', '1'),
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.parsed.y.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + (value / 1000).toFixed(0) + 'K';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 10
+                            },
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log("Chart rendered:", canvasId);
+    }
+
+    // Initialize charts when page loads
+    if (typeof Chart !== 'undefined') {
+        console.log("Chart.js loaded, initializing charts...");
+        console.log("Chart data:", chartData);
+        
+        // Render both charts
+        renderChart('indiaChart', chartData.india_labels, chartData.india_data, 'rgba(46, 204, 113, 0.8)');
+        renderChart('stateChart', chartData.state_labels, chartData.state_data, 'rgba(52, 152, 219, 0.8)');
+    } else {
+        console.error("Chart.js not loaded!");
+    }
+
+    // --- DISTANCE & COST CALCULATION FOR TABLES ---
+    {% if result and result.from_location %}
+    async function calculateTableDistances() {
+        const fromLocation = "{{ result.from_location }}";
+        console.log("Starting distance calculations from:", fromLocation);
+        
+        const fromCoords = await getCoords(fromLocation);
+        
+        if (!fromCoords) {
+            console.error("Could not get coordinates for from_location:", fromLocation);
+            // Show error in all distance cells
+            document.querySelectorAll('.distance-cell').forEach(cell => {
+                cell.innerHTML = '<small style="color:#dc3545;">Location Error</small>';
+            });
+            return;
+        }
+        
+        console.log("From coordinates:", fromCoords);
+
+        // Calculate distances for India Top 5
+        {% if top_5_india %}
+        const indiaDestinations = {{ top_5_india | tojson | safe }};
+        console.log("Calculating distances for India Top 5:", indiaDestinations.length, "destinations");
+        
+        for (let i = 0; i < indiaDestinations.length; i++) {
+            const destName = indiaDestinations[i].APMC;
+            const distSpan = document.getElementById(`dist-india-${i}`);
+            const tcostSpan = document.getElementById(`tcost-india-${i}`);
+            const netSpan = document.getElementById(`net-india-${i}`);
+            const grossRev = indiaDestinations[i].Gross_Rev;
+            const ratePerKm = indiaDestinations[i].rate_per_km;
+            
+            console.log(`Processing India #${i}: ${destName}`);
+            
+            try {
+                const destCoords = await getCoords(destName);
+                
+                if (!destCoords) {
+                    console.warn(`Could not get coordinates for: ${destName}`);
+                    distSpan.innerHTML = '<small style="color:#999;">Location N/A</small>';
+                    tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    netSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    continue;
+                }
+                
+                console.log(`  Coordinates found:`, destCoords);
+                
+                const distance = await getRouteDistance(fromCoords, destCoords);
+                
+                if (distance) {
+                    const distNum = parseFloat(distance);
+                    const transportCost = (distNum * ratePerKm).toFixed(0);
+                    const netRevenue = (grossRev - transportCost).toFixed(0);
+                    
+                    console.log(`  Distance: ${distance}km, Cost: ₹${transportCost}, Net: ₹${netRevenue}`);
+                    
+                    // Update cells
+                    distSpan.innerHTML = `<strong>${distance} km</strong>`;
+                    tcostSpan.innerHTML = `₹${formatNumber(transportCost)}`;
+                    
+                    // Color code net revenue
+                    const netColor = netRevenue > 0 ? '#2e7d32' : '#c62828';
+                    netSpan.innerHTML = `<span style="color: ${netColor};">₹${formatNumber(netRevenue)}</span>`;
+                } else {
+                    console.warn(`  Could not calculate route for: ${destName}`);
+                    distSpan.innerHTML = '<small style="color:#999;">Route N/A</small>';
+                    tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    netSpan.innerHTML = '<small style="color:#999;">-</small>';
+                }
+            } catch (e) {
+                console.error(`Error calculating distance for ${destName}:`, e);
+                distSpan.innerHTML = '<small style="color:#dc3545;">Error</small>';
+                tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                netSpan.innerHTML = '<small style="color:#999;">-</small>';
+            }
+            
+            // Delay to avoid rate limiting (increased to 500ms)
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        {% endif %}
+
+        // Calculate distances for State Top 5
+        {% if top_5_state %}
+        const stateDestinations = {{ top_5_state | tojson | safe }};
+        console.log("Calculating distances for State Top 5:", stateDestinations.length, "destinations");
+        
+        for (let i = 0; i < stateDestinations.length; i++) {
+            const destName = stateDestinations[i].APMC;
+            const distSpan = document.getElementById(`dist-state-${i}`);
+            const tcostSpan = document.getElementById(`tcost-state-${i}`);
+            const netSpan = document.getElementById(`net-state-${i}`);
+            const grossRev = stateDestinations[i].Gross_Rev;
+            const ratePerKm = stateDestinations[i].rate_per_km;
+            
+            console.log(`Processing State #${i}: ${destName}`);
+            
+            try {
+                const destCoords = await getCoords(destName);
+                
+                if (!destCoords) {
+                    console.warn(`Could not get coordinates for: ${destName}`);
+                    distSpan.innerHTML = '<small style="color:#999;">Location N/A</small>';
+                    tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    netSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    continue;
+                }
+                
+                console.log(`  Coordinates found:`, destCoords);
+                
+                const distance = await getRouteDistance(fromCoords, destCoords);
+                
+                if (distance) {
+                    const distNum = parseFloat(distance);
+                    const transportCost = (distNum * ratePerKm).toFixed(0);
+                    const netRevenue = (grossRev - transportCost).toFixed(0);
+                    
+                    console.log(`  Distance: ${distance}km, Cost: ₹${transportCost}, Net: ₹${netRevenue}`);
+                    
+                    // Update cells
+                    distSpan.innerHTML = `<strong>${distance} km</strong>`;
+                    tcostSpan.innerHTML = `₹${formatNumber(transportCost)}`;
+                    
+                    // Color code net revenue
+                    const netColor = netRevenue > 0 ? '#2e7d32' : '#c62828';
+                    netSpan.innerHTML = `<span style="color: ${netColor};">₹${formatNumber(netRevenue)}</span>`;
+                } else {
+                    console.warn(`  Could not calculate route for: ${destName}`);
+                    distSpan.innerHTML = '<small style="color:#999;">Route N/A</small>';
+                    tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                    netSpan.innerHTML = '<small style="color:#999;">-</small>';
+                }
+            } catch (e) {
+                console.error(`Error calculating distance for ${destName}:`, e);
+                distSpan.innerHTML = '<small style="color:#dc3545;">Error</small>';
+                tcostSpan.innerHTML = '<small style="color:#999;">-</small>';
+                netSpan.innerHTML = '<small style="color:#999;">-</small>';
+            }
+            
+            // Delay to avoid rate limiting (increased to 500ms)
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        {% endif %}
+        
+        console.log("Distance calculations completed!");
+    }
+
+    // Improved route distance calculation
+    async function getRouteDistance(fromCoords, toCoords) {
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoords.lon},${fromCoords.lat};${toCoords.lon},${toCoords.lat}?overview=false`;
+        
+        try {
+            const response = await fetch(osrmUrl);
+            
+            if (!response.ok) {
+                console.error("OSRM API error:", response.status, response.statusText);
+                return null;
+            }
+            
+            const data = await response.json();
+            
+            if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                const distanceKm = (data.routes[0].distance / 1000).toFixed(0);
+                return distanceKm;
+            }
+            
+            console.warn("OSRM returned no route:", data.code);
+            return null;
+        } catch (e) {
+            console.error("Route calculation error:", e);
+            return null;
+        }
+    }
+
+    // Start calculating distances after page loads
+    console.log("Page loaded, starting distance calculations in 1 second...");
+    setTimeout(function() {
+        calculateTableDistances();
+    }, 1000);
+    {% endif %}
+    {% else %}
+    // Initialize form filters only when on form page
+    document.addEventListener('DOMContentLoaded', function() {
+        filterMandis();
+    });
+    {% endif %}
 </script>
 
 {% endblock %}

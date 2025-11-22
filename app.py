@@ -53,20 +53,19 @@ MOCK_PRICES = [
     {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
 ]
 
+COMMODITY_MAP=json.load(open(r'D:\STUDY\IITB MS\CS 699\project\krishimitra\data\commodity_mapping.json'))
 
 def get_bar_chart_data(master_df, state_name, commodity_name):
     try:
         if master_df.empty:
             return None
 
-        # Clean Data: Convert Price to Numeric
-        # Create a copy to avoid SettingWithCopy warnings on the original master_df
+        # Clean Data
         df = master_df.copy()
         df['Modal_Price'] = pd.to_numeric(df['Modal_Price'].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
         
-        # Standardize strings
         state_name = state_name.strip().upper()
-        commodity_name = commodity_name.strip() # Case sensitive matching usually required for exact match
+        commodity_name = commodity_name.strip()
 
         # 1. Filter for Commodity (All India)
         national_df = df[df['Commodity'] == commodity_name].copy()
@@ -74,46 +73,57 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         if national_df.empty:
             return None
 
-        # Calculate Averages
         national_avg = round(national_df['Modal_Price'].mean(), 2)
         
-        # Filter for State
+        # 2. Filter for State
         state_df = national_df[national_df['state'].str.upper() == state_name].copy()
         
-        # Handle case where state might not have data for this crop
+        # --- STATE DATA PREPARATION ---
         if state_df.empty:
             state_avg = 0
-            state_top_10 = []
-            state_labels = []
+            # Initialize empty lists to prevent errors
+            st_asc_labels, st_asc_data = [], []
+            st_desc_labels, st_desc_data = [], []
         else:
             state_avg = round(state_df['Modal_Price'].mean(), 2)
-            # Get Cheapest 10 in State
-            state_sorted = state_df.sort_values(by='Modal_Price', ascending=True).head(10)
-            state_labels = state_sorted['APMC'].tolist()
-            state_top_10 = state_sorted['Modal_Price'].tolist()
+            
+            # State Cheapest (Ascending)
+            st_asc = state_df.sort_values(by='Modal_Price', ascending=True).head(5)
+            st_asc_labels = st_asc['APMC'].tolist()
+            st_asc_data = st_asc['Modal_Price'].tolist()
 
-        # Get Cheapest 10 in India
-        national_sorted = national_df.sort_values(by='Modal_Price', ascending=True).head(10)
-        national_labels = national_sorted.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
-        national_top_10 = national_sorted['Modal_Price'].tolist()
+            # State Costliest (Descending)
+            st_desc = state_df.sort_values(by='Modal_Price', ascending=False).head(5)
+            st_desc_labels = st_desc['APMC'].tolist()
+            st_desc_data = st_desc['Modal_Price'].tolist()
+
+        # --- NATIONAL DATA PREPARATION ---
+        
+        # National Cheapest (Ascending)
+        nat_asc = national_df.sort_values(by='Modal_Price', ascending=True).head(10)
+        nat_asc_labels = nat_asc.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
+        nat_asc_data = nat_asc['Modal_Price'].tolist()
+
+        # National Costliest (Descending)
+        nat_desc = national_df.sort_values(by='Modal_Price', ascending=False).head(10)
+        nat_desc_labels = nat_desc.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
+        nat_desc_data = nat_desc['Modal_Price'].tolist()
 
         return {
             "state_name": state_name,
             "national_avg": national_avg,
             "state_avg": state_avg,
-            "state_chart": {
-                "labels": state_labels,
-                "data": state_top_10
-            },
-            "national_chart": {
-                "labels": national_labels,
-                "data": national_top_10
-            }
+            # Return 4 distinct datasets
+            "state_asc": {"labels": st_asc_labels, "data": st_asc_data},
+            "state_desc": {"labels": st_desc_labels, "data": st_desc_data},
+            "national_asc": {"labels": nat_asc_labels, "data": nat_asc_data},
+            "national_desc": {"labels": nat_desc_labels, "data": nat_desc_data}
         }
 
     except Exception as e:
         print(f"Bar Chart Data Error: {e}")
         return None
+    
 
 # --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
@@ -126,7 +136,7 @@ def get_historical_data(state_name, commodity_name):
 
         # Standardize text
         state_name = state_name.strip().lower()
-        commodity_name = commodity_name.strip().lower()
+        commodity_name = COMMODITY_MAP[commodity_name.strip().upper()].lower()
         
         # Clean Data
         df['State'] = df['State'].str.strip()
@@ -316,6 +326,7 @@ def about():
 # @app.route('/prices', methods=['GET', 'POST'])
 @app.route('/prices', methods=['GET', 'POST'])
 def prices():
+    show_graph=False
     # 1. Get Master Data
     master_df = extract_commodity_list()
     
@@ -347,7 +358,8 @@ def prices():
 
         # Real Time Table Data
         if commodity_filter:
-            prices_data= (master_df.loc[master_df['Commodity'] == commodity_filter]).to_dict(orient='records')
+            
+            prices_data = extract_commodity_data(commodity_filter)
 
             # prices_data = extract_commodity_data(commodity_filter)
         else:
@@ -358,12 +370,13 @@ def prices():
 
         # --- CHART LOGIC ---
         if commodity_filter and state_filter:
+            show_graph=True
             # 1. Historical Line Chart (Your existing logic)
             historical_chart_data, historical_msg = get_historical_data(state_filter, commodity_filter)
             
             # 2. Bar Charts (New logic using master_df from live scrape)
             bar_chart_data = get_bar_chart_data(master_df, state_filter, commodity_filter)
-            
+            print(bar_chart_data)
         elif commodity_filter or state_filter:
             historical_msg = "Please select both State and Commodity to view charts."
             
@@ -373,6 +386,7 @@ def prices():
 
     return render_template(
         'prices.html',
+        show_graph=show_graph,
         current_user=current_user,
         is_commodity=is_commodity,
         Commodity=all_commodities,
@@ -392,38 +406,36 @@ def prices():
 @app.route('/transport-calculator', methods=['GET', 'POST'])
 def transport_calculator():
     show_calc = False
-    # 1. Get Master Data
-    master_df = extract_commodity_list()
     
-    # 2. Data Cleaning
+    # --- 1. Data Extraction ---
+    # NOTE: calling this on every request is very slow. 
+    # Ideally, cache this data or load from a CSV saved by a background job.
+    master_df = extract_commodity_list() 
+    
+    # --- 2. Data Cleaning & Setup ---
+    crop_to_mandi = {}
+    price_lookup = {}
+    all_crops = []
+
     if not master_df.empty:
-        # Clean Price
+        # Clean Price Column
         master_df['Modal_Price'] = pd.to_numeric(
             master_df['Modal_Price'].astype(str).str.replace(',', ''), 
             errors='coerce'
         ).fillna(0)
         
-        # Clean State
-        master_df['state'] = master_df['state'].str.upper()
-        
-        # --- NEW: Create the combined "Name, State" column ---
-        # This creates strings like "Ludhiana Mandi, Punjab"
+        # Standardize State and Create Display Name
+        master_df['state'] = master_df['state'].str.upper().str.strip()
         master_df['mandi_display'] = master_df['APMC'] + ", " + master_df['state'].str.title()
 
-    # 3. Create Mappings using the NEW 'mandi_display' column
-    crop_to_mandi = {}
-    price_lookup = {}
-    
-    if not master_df.empty:
-        # Map: Crop -> List of ["Mandi, State"]
-        # We group by Commodity, but take values from 'mandi_display'
-        crop_to_mandi = master_df.groupby('Commodity')['mandi_display'].apply(lambda x: sorted(list(set(x)))).to_dict()
+        # Create Mappings
+        crop_to_mandi = master_df.groupby('Commodity')['mandi_display'].apply(
+            lambda x: sorted(list(set(x)))
+        ).to_dict()
         
-        # Map: Crop -> { "Mandi, State" : Price }
+        # Create Price Lookup: {Crop: {Mandi_Display: Price}}
         for _, row in master_df.iterrows():
             crop = row['Commodity']
-            
-            # Use the combined name as the key
             mandi_key = row['mandi_display'] 
             price = row['Modal_Price']
             
@@ -431,53 +443,98 @@ def transport_calculator():
                 price_lookup[crop] = {}
             price_lookup[crop][mandi_key] = price
 
-    all_crops = sorted(list(crop_to_mandi.keys()))
+        all_crops = sorted(list(crop_to_mandi.keys()))
 
+    # Initialize variables
     result = None
-    lowest_mandis = []
+    top_5_india = []
+    top_5_state = []
+    chart_data = None
 
     if request.method == 'POST':
         try:
-            # Get Data
+            # Get Form Data
             selected_crop = request.form.get('crop')
-            selected_mandi = request.form.get('to_mandi') # This will now contain "Mandi, State"
-            quantity = float(request.form.get('quantity', 0))
-            price = float(request.form.get('price', 0))
-            transport_cost = float(request.form.get('transport_cost', 0))
+            selected_mandi_full = request.form.get('to_mandi')  # Format: "APMC, State"
+            from_location = request.form.get('from_location')
             
-            # Calculate
+            # Use float() with default 0 to prevent crashes on empty inputs
+            quantity = float(request.form.get('quantity') or 0)
+            price = float(request.form.get('price') or 0)
+            distance = float(request.form.get('distance') or 0)
+            rate_per_km = float(request.form.get('rate_per_km') or 25)
+            
+            # Calculations
+            transport_cost = distance * rate_per_km
             gross_revenue = quantity * price
             net_revenue = gross_revenue - transport_cost
+            profit_per_qtl = (net_revenue / quantity) if quantity > 0 else 0
             
+            # Extract State name safely
+            selected_state_name = ""
+            if selected_mandi_full and ',' in selected_mandi_full:
+                selected_state_name = selected_mandi_full.split(',')[-1].strip().upper()
+
             result = {
                 'gross_revenue': gross_revenue,
                 'transport_cost': transport_cost,
                 'net_revenue': net_revenue,
                 'quantity': quantity,
                 'selected_crop': selected_crop,
-                'selected_mandi': selected_mandi
+                'selected_mandi': selected_mandi_full,
+                'distance': distance,
+                'rate_per_km': rate_per_km,
+                'from_location': from_location,
+                'profit_per_qtl': profit_per_qtl
             }
 
-            # --- LOGIC FOR COMPARISON ---
+            # --- COMPARISON LOGIC (Top 5 Opportunities) ---
             if not master_df.empty and selected_crop:
+                # Filter by Crop
                 crop_df = master_df[master_df['Commodity'] == selected_crop].copy()
-                crop_df = crop_df.sort_values(by='Modal_Price', ascending=True)
                 
-                top_3 = crop_df.head(3).to_dict(orient='records')
-                
-                for row in top_3:
-                    pot_net = (quantity * row['Modal_Price']) - transport_cost
-                    lowest_mandis.append({
-                        'APMC': row['mandi_display'], # Show "Mandi, State" here too
-                        'Price': row['Modal_Price'],
-                        'Pot_Net': pot_net
-                    })
+                if not crop_df.empty:
+                    # 1. Top 5 India (Sorted by Highest Price)
+                    df_india = crop_df.sort_values(by='Modal_Price', ascending=False).head(5)
+                    
+                    for _, row in df_india.iterrows():
+                        top_5_india.append({
+                            'APMC': row['mandi_display'],
+                            'Price': row['Modal_Price'],
+                            'Gross_Rev': quantity * row['Modal_Price'],
+                            'rate_per_km': rate_per_km  # Pass rate to frontend
+                        })
+
+                    # 2. Top 5 Selected State
+                    df_state = crop_df[crop_df['state'] == selected_state_name].sort_values(by='Modal_Price', ascending=False).head(5)
+                    
+                    for _, row in df_state.iterrows():
+                        top_5_state.append({
+                            'APMC': row['mandi_display'],
+                            'Price': row['Modal_Price'],
+                            'Gross_Rev': quantity * row['Modal_Price'],
+                            'rate_per_km': rate_per_km  # Pass rate to frontend
+                        })
+
+                    # Prepare Data for Charts - ONLY IF WE HAVE DATA
+                    if top_5_india:
+                        chart_data = {
+                            'india_labels': [item['APMC'].split(',')[0] for item in top_5_india],
+                            'india_data': [item['Gross_Rev'] for item in top_5_india], 
+                            'state_labels': [item['APMC'].split(',')[0] for item in top_5_state] if top_5_state else [],
+                            'state_data': [item['Gross_Rev'] for item in top_5_state] if top_5_state else [],
+                            'state_name': selected_state_name.title() if selected_state_name else "State"
+                        }
+                        print("✓ Chart data prepared:", chart_data)
+                    else:
+                        print("✗ No data found for charts")
+
             show_calc = True
 
         except Exception as e:
             print(f"Calculation Error: {e}")
-            flash("Error in calculation.", "danger")
-    print(show_calc)
+            flash("Error in calculation. Please check your inputs.", "danger")
+
     return render_template('transport_calculator.html', 
                            show_calc=show_calc,
                            current_user=current_user,
@@ -485,7 +542,9 @@ def transport_calculator():
                            crop_to_mandi=crop_to_mandi,
                            price_lookup=price_lookup,
                            result=result,
-                           lowest_mandis=lowest_mandis)
+                           top_5_india=top_5_india,
+                           top_5_state=top_5_state,
+                           chart_data=chart_data)
 
 @app.route('/compare-region')
 def compare_region():

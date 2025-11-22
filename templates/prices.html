@@ -57,6 +57,7 @@
                         <th>Min Price</th>
                         <th>Modal Price</th>
                         <th>Max Price</th>
+                        <th>Transport Cost</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,6 +70,11 @@
                             <td><span style="color: var(--primary-color);">₹{{ price.Min_Price }}</span></td>
                             <td><span style="color: var(--primary-color); font-weight: bold;">₹{{ price.Modal_Price }}</span></td>
                             <td><span style="color: var(--primary-color);">₹{{ price.Max_Price }}</span></td>
+                            <td>
+                                <a href="/transport-calculator" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">
+                                    <i class="fas fa-calculator"></i> Calculate
+                                </a>
+                            </td>
                         </tr>
                         {% endfor %}
                     {% else %}
@@ -77,55 +83,76 @@
                 </tbody>
             </table>
         </div>
+    </div>    
         {% endif %}
 
         {% if bar_chart_data %}
-        <div class="grid grid-2 mt-3">
-            <div class="card">
-                <h4><i class="fas fa-map-marker-alt"></i> Cheapest Mandis in {{ bar_chart_data.state_name }}</h4>
-                <div style="height: 300px; width: 100%;">
-                    <canvas id="stateBarChart"></canvas>
+    <div class="extended_container">    
+        <div class="card mt-3">
+            <h3><i class="fas fa-map-marker-alt"></i> State Analysis: {{ bar_chart_data.state_name }}</h3>
+            <div class="grid grid-2">
+                <div>
+                    <h5 style="text-align:center; color: var(--text-light);">Top Price Mandis (Best for Selling)</h5>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="stateDescChart"></canvas>
+                    </div>
                 </div>
-            </div>
-            <div class="card">
-                <h4><i class="fas fa-globe-asia"></i> Cheapest Mandis in India</h4>
-                <div style="height: 300px; width: 100%;">
-                    <canvas id="nationalBarChart"></canvas>
+                <div>
+                    <h5 style="text-align:center; color: var(--text-light);">Low Price Mandis (Worst for Selling)</h5>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="stateAscChart"></canvas>
+                    </div>
                 </div>
+                
             </div>
         </div>
-        {% endif %}
 
         <div class="card mt-3">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3><i class="fas fa-chart-area"></i> Historical Price Trends</h3>
-                {% if chart_data %}
-                <div style="min-width: 200px;">
-                    <select id="chartMarketSelect" class="form-control" onchange="updateHistoricalChart()">
-                        <option value="">-- State vs India Average --</option>
-                        {% for market in chart_data.market_list %}
-                        <option value="{{ market }}">{{ market }}</option>
-                        {% endfor %}
-                    </select>
+            <h3><i class="fas fa-globe-asia"></i> National Analysis: All India</h3>
+            <div class="grid grid-2">
+                <div>
+                    <h5 style="text-align:center; color: var(--text-light);">Top Price Mandis (Best for Selling)</h5>
+                    <div style="height: 450px; width: 100%;">
+                        <canvas id="natDescChart"></canvas>
+                    </div>
                 </div>
-                {% endif %}
+                <div>
+                    <h5 style="text-align:center; color: var(--text-light);">Low Price Mandis (Worst for Selling)</h5>
+                    <div style="height: 450px; width: 100%; padding-left: -5vw;">
+                        <canvas id="natAscChart"></canvas>
+                    </div>
+                </div>
+                
             </div>
+        </div>
+        
+
+        <div class="card mt-3">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3><i class="fas fa-chart-area"></i> Historical Price Trends</h3>
+        {% if chart_data %}
+        <div style="min-width: 200px;">
+            <select id="chartMarketSelect" class="form-control" onchange="updateHistoricalChart()">
+                <option value="">-- State vs India Average --</option>
+                {% for market in chart_data.market_list %}
+                <option value="{{ market }}">{{ market }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="height: 400px; width: 100%;">
+        <canvas id="priceTrendChart"></canvas>
+    </div>
+    </div>
+    
+
             
-            {% if chart_data %}
-                <div style="position: relative; height:400px; width:100%">
-                    <canvas id="priceTrendChart"></canvas>
-                </div>
-            {% elif historical_msg %}
-                <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
-                    <p style="margin-top: 1rem; color: #e74c3c; font-weight: bold;">{{ historical_msg }}</p>
-                </div>
-            {% else %}
-                <div style="background-color: var(--light-bg); padding: 3rem; text-align: center; border-radius: 5px; margin-top: 1rem;">
-                    <p style="margin-top: 1rem; color: var(--text-light);">Chart visualization will appear here</p>
-                </div>
-            {% endif %}
+        
         </div>
     </div>
+    {% endif %}
 </section>
 
 <script>
@@ -142,10 +169,12 @@
     {% if bar_chart_data %}
         const barData = {{ bar_chart_data | tojson | safe }};
         
-        function createComboChart(ctxId, labels, barDataPoints, natAvg, stAvg) {
+        function createComboChart(ctxId, labels, dataPoints, color, label) {
             const ctx = document.getElementById(ctxId).getContext('2d');
-            
-            // Create arrays for the average lines (same value repeated)
+            const natAvg = barData.national_avg;
+            const stAvg = barData.state_avg;
+
+            // Create Avg Line Arrays
             const natAvgArray = Array(labels.length).fill(natAvg);
             const stAvgArray = Array(labels.length).fill(stAvg);
 
@@ -155,18 +184,18 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Market Price',
-                            data: barDataPoints,
-                            backgroundColor: 'rgba(46, 204, 113, 0.6)',
-                            borderColor: 'rgba(46, 204, 113, 1)',
+                            label: label,
+                            data: dataPoints,
+                            backgroundColor: color, // Dynamic Color
                             borderWidth: 1,
+                            maxBarThickness: 40,
                             order: 2
                         },
                         {
                             label: 'India Avg (₹' + natAvg + ')',
                             data: natAvgArray,
                             type: 'line',
-                            borderColor: '#e74c3c', // Red
+                            borderColor: '#95a5a6', // Grey
                             borderWidth: 2,
                             borderDash: [5, 5],
                             pointRadius: 0,
@@ -191,35 +220,30 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: { beginAtZero: false }
+                    },
+                    plugins: {
+                        legend: { display: false } // Hide legend to save space if preferred
                     }
                 }
             });
         }
 
-        // Initialize the two bar charts
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. State Chart
-            if(barData.state_chart.labels.length > 0) {
-                createComboChart(
-                    'stateBarChart', 
-                    barData.state_chart.labels, 
-                    barData.state_chart.data, 
-                    barData.national_avg, 
-                    barData.state_avg
-                );
+            // Green for Cheapest, Red for Costliest
+            const colorCostly = 'rgba(46, 204, 113, 0.7)'; // Green
+            const colorCheap = 'rgba(231, 76, 60, 0.7)'; // Red
+
+            // 1. State Charts
+            if(barData.state_asc.labels.length > 0) {
+                createComboChart('stateAscChart', barData.state_asc.labels, barData.state_asc.data, colorCheap, 'Price');
+                createComboChart('stateDescChart', barData.state_desc.labels, barData.state_desc.data, colorCostly, 'Price');
             }
 
-            // 2. National Chart
-            createComboChart(
-                'nationalBarChart', 
-                barData.national_chart.labels, 
-                barData.national_chart.data, 
-                barData.national_avg, 
-                barData.state_avg
-            );
+            // 2. National Charts
+            createComboChart('natAscChart', barData.national_asc.labels, barData.national_asc.data, colorCheap, 'Price');
+            createComboChart('natDescChart', barData.national_desc.labels, barData.national_desc.data, colorCostly, 'Price');
         });
     {% endif %}
-
     // --- HISTORICAL CHART LOGIC (Renamed function to avoid conflicts) ---
     {% if chart_data %}
         const chartData = {{ chart_data | tojson | safe }};
