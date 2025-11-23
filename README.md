@@ -121,11 +121,11 @@ krishimitra/
 ├── models.py # SQLAlchemy database models
 ├── requirements.txt # Python dependencies
 ├── README.md # Project documentation
-├── webscrap.ipynb # Jupyter notebook for scraping experiments
 │
 ├── data/ # Data files
-│   ├── agmarknet_india_historical_prices_2024_2025.csv
-│   └── commodity_mapping.json # Commodity name standardization
+│   ├z── agmarknet_india_historical_prices_2024_2025.csv
+│   ├── commodity_mapping.json # Commodity name standardization
+│   └── commodity_crop.json # Commodity name standardization
 │
 ├── instance/ # SQLite database directory
 │   └── krishimitra.db # User and transaction data
@@ -141,10 +141,7 @@ krishimitra/
     ├── home.html # Landing page
     ├── prices.html # Market prices with charts
     ├── transport_calculator.html # Transport cost calculator
-    ├── compare_region.html # Regional comparison (WIP)
-    ├── farmer_input.html # Crowdsourced data form
     ├── community.html # Discussion forum
-    ├── schemes.html # Government schemes
     ├── login.html # User login
     ├── register.html # User registration
     ├── dashboard.html # User dashboard
