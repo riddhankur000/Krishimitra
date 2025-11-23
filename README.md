@@ -1,263 +1,273 @@
 # 🌾 Krishimitra - Farmer Market Intelligence Platform
 
-A comprehensive Flask-based web application designed to empower farmers with transparent market pricing information and tools for better decision-making.
+A comprehensive Flask-based web application designed to empower Indian farmers with transparent market pricing information, transport cost calculations, and data-driven decision-making tools.
 
-## 📋 Project Overview
+---
 
-Krishimitra provides:
-- Real-time market prices from various mandis
-- Transport cost calculator
-- Regional price comparison tools
-- Crowdsourced data input from farmers
-- Community forum for knowledge sharing
-- Information about government schemes
+## Table of Contents
 
-## 🗂️ Complete Project Structure
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API & Data Sources](#api-and-data-sources)
+- [Acknowledgments](#acknowledgments)
+- [Inspiration](#inspiration)
+
+---
+
+## Overview
+
+**Krishimitra** ("Farmer's Friend") addresses the critical information asymmetry in Indian agricultural markets. Farmers often lack real-time price data across different mandis, leading to exploitation by middlemen and suboptimal selling decisions.
+
+### Problem Statement
+
+- **Lack of Price Transparency**: Farmers don't know the best markets to sell their produce
+- **High Transport Costs**: No tools to calculate if transporting to distant mandis is profitable
+- **Information Gap**: Limited access to historical price trends and market intelligence
+
+### Our Solution
+
+Krishimitra aggregates real-time market prices from eNAM (National Agriculture Market), provides transport cost calculators, visualizes price trends, and offers a platform for farmers to share market insights.
+
+---
+
+## Features
+
+### **Live Market Prices**
+
+- Real-time scraping from eNAM's 1,000+ integrated mandis
+- Filter by **State** and **Commodity** (193+ crops)
+- Display Min/Modal/Max prices per quintal
+- Arrival quantities and trade volumes
+
+### **Data Visualization**
+
+- **Historical Price Trends**: Line charts showing 6-month price movements
+- **State vs National Comparison**: Bar charts comparing regional prices
+- **Top 5 Market Opportunities**: Identify highest-paying mandis
+
+### **Transport Cost Calculator**
+
+- Calculate net profit after transport expenses
+- Factor in distance, fuel costs, and commodity prices
+- Compare profitability across multiple mandis
+- Interactive charts for opportunity comparison
+
+### **User Management**
+
+- Secure authentication system with password hashing
+- Role-based access (Farmer, Trader, NGO)
+- User dashboard with activity tracking
+- Profile management
+
+### **Crowdsourced Data Input**
+
+- Farmers can submit sale prices from local mandis
+- Helps validate official data
+- Community-driven price intelligence
+
+### **Community Forum**
+
+- Share market insights and experiences
+- Discussion threads by crop and region
+- Like/comment functionality (planned)
+
+### **Government Schemes**
+
+- Information about PM-KISAN, crop insurance, and subsidies
+- Eligibility criteria and application links
+
+---
+
+## Tech Stack
+
+### Backend
+
+- **Framework**: Flask 3.0.0
+- **Database**: SQLAlchemy with SQLite (PostgreSQL for production)
+- **Authentication**: Flask-Login with Werkzeug password hashing
+- **Web Scraping**: Selenium 4.15.2 + BeautifulSoup4
+
+### Frontend
+
+- **Template Engine**: Jinja2
+- **Styling**: Custom CSS with responsive design
+- **JavaScript**: Vanilla JS for interactivity
+- **Charts**: Chart.js for data visualization
+
+### Data Sources
+
+- **eNAM Live Prices**: https://enam.gov.in/web/dashboard/live_price
+- **Historical Data**: Agmarknet India 2024-2025 CSV dataset https://www.kaggle.com/datasets/anishaman07/agmarknet-india-commodity-prices-oct24-aug25
+- **Commodity Mapping**: Custom JSON file
+
+### DevOps
+
+- **Version Control**: Git/GitHub
+- **Deployment**: Planned for AWS/Heroku/Render
+- **Environment**: Python virtual environment
+
+---
+
+## Project Structure
 
 ```
 krishimitra/
 │
-├── app.py                          # Main Flask application
-├── requirements.txt                # Python dependencies
-├── README.md                       # This file
+├── app.py # Main Flask application (800+ lines)
+├── models.py # SQLAlchemy database models
+├── requirements.txt # Python dependencies
+├── README.md # Project documentation
+├── webscrap.ipynb # Jupyter notebook for scraping experiments
 │
-├── static/                         # Static files
+├── data/ # Data files
+│   ├── agmarknet_india_historical_prices_2024_2025.csv
+│   └── commodity_mapping.json # Commodity name standardization
+│
+├── instance/ # SQLite database directory
+│   └── krishimitra.db # User and transaction data
+│
+├── static/ # Static assets
 │   ├── css/
-│   │   └── style.css              # Main stylesheet
-│   ├── js/
-│   │   └── main.js                # JavaScript functionality
-│   └── images/
-│       └── logo.png               # Your logo (add this)
+│   │   └── style.css # Main stylesheet
+│   └── js/
+│       └── main.js # Frontend JavaScript
 │
-└── templates/                      # HTML templates
-    ├── base.html                   # Base template with navbar/footer
-    ├── home.html                   # Homepage
-    ├── about.html                  # About page
-    ├── prices.html                 # Market prices
-    ├── transport_calculator.html   # Transport calculator
-    ├── compare_region.html         # Regional comparison
-    ├── farmer_input.html           # Data submission form
-    ├── community.html              # Community forum
-    ├── schemes.html                # Government schemes
-    ├── login.html                  # Login page
-    ├── register.html               # Registration
-    ├── dashboard.html              # User dashboard
-    ├── contact.html                # Contact page
-    └── terms_privacy.html          # Terms & Privacy
+└── templates/ # Jinja2 HTML templates
+    ├── base.html # Base template with navbar/footer
+    ├── home.html # Landing page
+    ├── prices.html # Market prices with charts
+    ├── transport_calculator.html # Transport cost calculator
+    ├── compare_region.html # Regional comparison (WIP)
+    ├── farmer_input.html # Crowdsourced data form
+    ├── community.html # Discussion forum
+    ├── schemes.html # Government schemes
+    ├── login.html # User login
+    ├── register.html # User registration
+    ├── dashboard.html # User dashboard
+    ├── profile.html # User profile
+    ├── contact.html # Contact form
+    └── terms_privacy.html # Legal pages
 ```
 
-## 🚀 Quick Start
+---
+
+## Installation
 
 ### Prerequisites
+
 - Python 3.8 or higher
-- pip (Python package installer)
+- pip package manager
+- Chrome/Chromium browser (for Selenium)
+- Git
 
-### Installation Steps
+### Step-by-Step Setup
 
-1. **Create project directory and navigate to it:**
+1. **Clone the repository**
+
 ```bash
-mkdir krishimitra
-cd krishimitra
+git clone https://github.com/riddhankur000/Krishimitra.git
+cd Krishimitra
 ```
 
-2. **Create all directories:**
-```bash
-mkdir -p static/css static/js static/images templates
-```
+2. **Create virtual environment**
 
-3. **Create virtual environment:**
 ```bash
 python -m venv venv
-```
 
-4. **Activate virtual environment:**
-
-**On Windows:**
-```bash
+On Windows
 venv\Scripts\activate
-```
 
-**On macOS/Linux:**
-```bash
+On macOS/Linux
 source venv/bin/activate
 ```
 
-5. **Create `requirements.txt` file** (copy content from the requirements.txt artifact)
+3. **Install dependencies**
 
-6. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-7. **Copy all files** from the artifacts:
-   - `app.py` → root directory
-   - `style.css` → `static/css/`
-   - `main.js` → `static/js/`
-   - All HTML files → `templates/`
+4. **Run the application**
 
-8. **Run the application:**
 ```bash
 python app.py
 ```
 
-9. **Open your browser and visit:**
+5. **Open browser**
+
 ```
 http://127.0.0.1:5000
 ```
 
-## 🎨 Features Currently Implemented
+---
 
+## Usage
 
-## 📝 Next Steps for Backend Integration
+### For Farmers
 
-Now that the frontend is complete, here's what needs to be implemented:
+1. **Register/Login**: Create an account with your details
+2. **Check Prices**: Navigate to "Market Prices" to see real-time rates
+3. **Filter Data**: Select your state and crop to see relevant prices
+4. **Calculate Transport**: Use the Transport Calculator to compare mandi profitability
+5. **Submit Data**: Share your local mandi prices to help the community
+6. **View Trends**: Analyze historical price charts to time your sales
 
-<!-- ### Phase 1: Database Setup -->
+### For Traders/NGOs
+
+1. **Market Intelligence**: Access comprehensive price data across states
+2. **Bulk Analysis**: Download data for further analysis (planned)
+3. **Scheme Information**: Help farmers access government benefits
+
+---
+
+## API and Data Sources
+
+### Web Scraping Implementation
+
+**Example: Extracting live prices from eNAM**
+
 ```python
-# Add to app.py:
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager
+def extract_commodity_list():
+driver = webdriver.Chrome(service=service, options=chrome_options)
+url = 'https://enam.gov.in/web/dashboard/live_price'
+driver.get(url)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
-# db = SQLAlchemy(app)
-# login_manager = LoginManager(app)
-# ```
+text
+# Click commodity radio and select "-- All --"
+commodity_radio.click()
+select_commodity.select_by_visible_text("-- All --")
 
-# **Models to create:**
-# - User (farmers, NGOs, traders)
-# - Crop
-# - MarketPrice
-# - Mandi
-# - FarmerInput (crowdsourced data)
-# - CommunityPost
-# - Scheme
+# Parse table data
+soup = BeautifulSoup(driver.page_source, 'html.parser')
+# Extract State, APMC, Commodity, Min/Modal/Max prices
 
-# ### Phase 2: Web Scraping
-# - Government mandi APIs
-# - State agricultural department websites
-# - APMC price data
+return dataframe
+```
 
-# **Recommended libraries:**
-# - BeautifulSoup4 (already in requirements.txt)
-# - Requests (already in requirements.txt)
-# - Selenium (if needed for dynamic content)
+### Data Processing
 
-# ### Phase 3: Authentication System
-# - Implement Flask-Login (already in requirements.txt)
-# - Password hashing with werkzeug.security
-# - Email verification (optional)
-# - SMS OTP verification
+- **Historical Data**: 2024-2025 Agmarknet CSV with 500,000+ price records
+- **Commodity Mapping**: Standardizes crop names across data sources
+- **Price Aggregation**: Calculates state-level and national averages
 
-# ### Phase 4: Data Visualization
-# - Integrate Chart.js or Plotly
-# - Price trend charts
-# - Regional heatmaps
-# - Interactive maps (Leaflet.js or Google Maps API)
+---
 
-# ### Phase 5: Advanced Features
-# - Real-time price alerts
-# - Price prediction (ML model)
-# - WhatsApp/SMS notifications
-# - Multi-language support
-# - Export to PDF/Excel
-# - API endpoints for mobile app
+## Acknowledgments
 
-# ## 🔧 Configuration
+- **eNAM**: For providing open access to market price data
+- **Agmarknet**: For historical agricultural price datasets
+- **Indian Government**: For initiatives like Digital India enabling such platforms
+- **Farmers**: The backbone of our nation, for whom this platform exists
+- **Contributors**: Everyone who has helped build and improve Krishimitra
 
-# ### Secret Key
-# Change the secret key in `app.py`:
-# ```python
-# app.secret_key = 'your-very-secret-key-here'
-# ```
+---
 
-# ### Database (Future)
-# ```python
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
-# # Or for production:
-# # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:pass@localhost/krishimitra'
-# ```
+## Inspiration
 
-# ## 🎨 Customization
+> _"The farmer is the only man in our economy who buys everything at retail, sells everything at wholesale, and pays the freight both ways."_ - John F. Kennedy
 
-# ### Colors
-# Edit colors in `static/css/style.css`:
-# ```css
-# :root {
-#     --primary-color: #2d7a3e;    /* Main green */
-#     --secondary-color: #5cb85c;  /* Light green */
-#     --accent-color: #ff9800;     /* Orange */
-# }
-# ```
-
-# ### Logo
-# Add your logo to `static/images/logo.png`
-
-# ### Mock Data
-# Current mock data is in `app.py`. Replace with real data once database is set up.
-
-# ## 📱 Testing
-
-# ### Test Different User Types
-# The demo login accepts any credentials and sets up a basic session. To test:
-# - Farmer view: Login with any credentials (defaults to farmer)
-# - NGO view: Modify session in code temporarily
-
-# ### Test Responsive Design
-# - Desktop: Full browser window
-# - Tablet: Resize to ~768px width
-# - Mobile: Resize to ~375px width
-
-# ## 🐛 Troubleshooting
-
-# ### Port already in use
-# ```bash
-# # Change port in app.py:
-# app.run(debug=True, port=5001)
-# ```
-
-# ### Module not found
-# ```bash
-# pip install -r requirements.txt
-# ```
-
-# ### Templates not found
-# Ensure all HTML files are in the `templates/` directory
-
-# ### CSS not loading
-# Check that `static/css/style.css` exists and Flask is running
-
-# ## 📞 Support
-
-# For questions or issues:
-# - Email: dev@krishimitra.in
-# - Create an issue in the project repository
-
-# ## 📄 License
-
-# This project is intended for educational and social good purposes.
-
-# ## 🙏 Acknowledgments
-
-# - Designed to help Indian farmers get fair prices
-# - Inspired by the need for market transparency
-# - Built with modern web technologies
-
-# ---
-
-# ## 🎯 Current Status
-
-# **Frontend: 100% Complete ✅**
-# - All 13 pages designed and functional
-# - Fully responsive
-# - Modern, farmer-friendly UI
-# - Ready for backend integration
-
-# **Backend: 0% - Ready to Start 🚀**
-# - Database models needed
-# - Web scraping implementation needed
-# - Authentication system needed
-# - Real data integration needed
-
-# ---
-
-# **Ready to proceed with backend development? Let me know which phase you'd like to tackle first!**
+This project aims to level the playing field by giving farmers the same market intelligence that traders have always had.
