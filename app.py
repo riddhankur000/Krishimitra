@@ -27,9 +27,11 @@ import matplotlib
 matplotlib.use('Agg') # Prevents GUI errors
 
 chrome_options = Options()
-chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-chrome_options.add_argument('--headless')  # Run in background
-
+# chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+chrome_options.add_argument("--window-size=1920,1080")
+chrome_options.add_argument("--disable-blink-features=AutomationControlled") 
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
+# chrome_options.add_argument('--headless')  # Run in background
 
 # REMOVE: Service(ChromeDriverManager().install())
 # REPLACE WITH: Service() 
