@@ -162,8 +162,67 @@
     const allStates = {{ states | tojson | safe }};
     const allCommodities = {{ Commodity | tojson | safe }};
 
-    function filterCommodities() { /* ... existing code ... */ }
-    function filterStates() { /* ... existing code ... */ }
+    function filterCommodities() {
+        const stateSelect = document.getElementById("state");
+        const commoditySelect = document.getElementById("commodity");
+        const selectedState = stateSelect.value;
+        const currentCommodity = commoditySelect.value;
+
+        // Clear current commodity options
+        commoditySelect.innerHTML = '<option value="">All Commodities</option>';
+
+        let optionsToAdd = [];
+
+        if (selectedState && stateMap[selectedState]) {
+            // If a state is selected, only show commodities for that state
+            optionsToAdd = stateMap[selectedState];
+        } else {
+            // If no state selected, show all commodities
+            optionsToAdd = allCommodities;
+        }
+
+        // Populate the dropdown
+        optionsToAdd.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.text = item;
+            if (item === currentCommodity) {
+                option.selected = true;
+            }
+            commoditySelect.appendChild(option);
+        });
+    }
+
+    function filterStates() {
+        const stateSelect = document.getElementById("state");
+        const commoditySelect = document.getElementById("commodity");
+        const selectedCommodity = commoditySelect.value;
+        const currentState = stateSelect.value;
+
+        // Clear current state options
+        stateSelect.innerHTML = '<option value="">All States</option>';
+
+        let optionsToAdd = [];
+
+        if (selectedCommodity && commodityMap[selectedCommodity]) {
+            // If a commodity is selected, only show states having that commodity
+            optionsToAdd = commodityMap[selectedCommodity];
+        } else {
+            // If no commodity selected, show all states
+            optionsToAdd = allStates;
+        }
+
+        // Populate the dropdown
+        optionsToAdd.forEach(state => {
+            const option = document.createElement("option");
+            option.value = state;
+            option.text = state;
+            if (state === currentState) {
+                option.selected = true;
+            }
+            stateSelect.appendChild(option);
+        });
+    }
 
     // --- NEW: BAR CHART LOGIC ---
     {% if bar_chart_data %}

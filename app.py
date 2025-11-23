@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from functools import wraps
 import os
@@ -16,7 +16,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import io
 import base64
-from models import db, User, FarmerInput, CommunityPost, MarketPrice
+from models import db, User, CommunityPost
 import glob
 import random
 import json
@@ -237,6 +237,7 @@ def extract_commodity_list():
         data_rows = data_list[1:]
         num_cols = 6
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
+        # dataframe = pd.DataFrame(MOCK_PRICES)
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
         driver.quit()
         return dataframe
@@ -274,6 +275,7 @@ def extract_commodity_data(commodity_name):
         num_cols = 6
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        # dataframe = pd.DataFrame(MOCK_PRICES)
         driver.quit()
         return dataframe.to_dict(orient='records')
     except Exception as e:
@@ -315,7 +317,7 @@ def login_required(f):
 
 # Routes
 @app.route('/')
-def home(current_user=current_user):
+def home():
     return render_template('home.html',current_user=current_user)
 
 @app.route('/about')
@@ -546,59 +548,177 @@ def transport_calculator():
                            top_5_state=top_5_state,
                            chart_data=chart_data)
 
-@app.route('/compare-region')
-def compare_region():
-    return render_template('compare_region.html', 
-                           current_user=current_user,
-                         crops=MOCK_CROPS,
-                         states=MOCK_STATES)
+# @app.route('/compare-region')
+# def compare_region():
+#     return render_template('compare_region.html', 
+#                            current_user=current_user,
+#                          crops=MOCK_CROPS,
+#                          states=MOCK_STATES)
 
-@app.route('/farmer-input', methods=['GET', 'POST'])
-@login_required
-def farmer_input():
+# @app.route('/farmer-input', methods=['GET', 'POST'])
+# @login_required
+# def farmer_input():
+#     if request.method == 'POST':
+#         try:
+#             new_input = FarmerInput(
+#                 user_id=current_user.id,
+#                 crop=request.form.get('crop'),
+#                 quantity=float(request.form.get('quantity')),
+#                 price=float(request.form.get('price')),
+#                 mandi=request.form.get('mandi'),
+#                 sale_date=datetime.strptime(request.form.get('date'), '%Y-%m-%d').date(),
+#                 notes=request.form.get('notes')
+#             )
+#             db.session.add(new_input)
+#             db.session.commit()
+#             flash('Thank you! Your data has been submitted successfully.', 'success')
+#         except Exception as e:
+#             db.session.rollback()
+#             flash('Error submitting data. Please try again.', 'danger')
+#             print(f"Error: {e}")
+#         return redirect(url_for('farmer_input',current_user=current_user))
+    
+#     return render_template('farmer_input.html', 
+#                            current_user=current_user,
+#                          crops=MOCK_CROPS,
+#                          mandis=MOCK_MANDIS)
+
+
+# Add these routes to your app.py file (replace the existing community route)
+
+@app.route('/community', methods=['GET', 'POST'])
+def community():
     if request.method == 'POST':
+        # Check if user is logged in
+        if not current_user['is_authenticated']:
+            flash('Please login to post in the community.', 'warning')
+            return redirect(url_for('login'))
+        
         try:
-            new_input = FarmerInput(
-                user_id=current_user.id,
-                crop=request.form.get('crop'),
-                quantity=float(request.form.get('quantity')),
-                price=float(request.form.get('price')),
-                mandi=request.form.get('mandi'),
-                sale_date=datetime.strptime(request.form.get('date'), '%Y-%m-%d').date(),
-                notes=request.form.get('notes')
+            title = request.form.get('title')
+            category = request.form.get('category')
+            content = request.form.get('content')
+            
+            # Validate inputs
+            if not title or not content:
+                flash('Title and content are required.', 'danger')
+                return redirect(url_for('community'))
+            
+            # Create new post
+            new_post = CommunityPost(
+                user_id=current_user['id'],
+                title=title,
+                content=content,
+                category=category
             )
-            db.session.add(new_input)
+            
+            db.session.add(new_post)
             db.session.commit()
-            flash('Thank you! Your data has been submitted successfully.', 'success')
+            
+            flash('Your post has been published successfully!', 'success')
+            return redirect(url_for('community'))
+            
         except Exception as e:
             db.session.rollback()
-            flash('Error submitting data. Please try again.', 'danger')
+            flash('Error posting to community. Please try again.', 'danger')
             print(f"Error: {e}")
-        return redirect(url_for('farmer_input',current_user=current_user))
+            return redirect(url_for('community'))
     
-    return render_template('farmer_input.html', 
-                           current_user=current_user,
-                         crops=MOCK_CROPS,
-                         mandis=MOCK_MANDIS)
+    # GET request - fetch latest 10 posts
+    posts = CommunityPost.query\
+        .order_by(CommunityPost.created_at.desc())\
+        .limit(10)\
+        .all()
+    
+    # Convert to list of dicts with author info
+    posts_data = []
+    for post in posts:
+        author = User.query.get(post.user_id)
+        posts_data.append({
+            'id': post.id,
+            'title': post.title,
+            'content': post.content,
+            'excerpt': post.content[:100] + '...' if len(post.content) > 100 else post.content,
+            'category': post.category,
+            'likes': post.likes,
+            'author': author.full_name if author else 'Unknown',
+            'created_at': post.created_at.strftime('%b %d, %Y at %I:%M %p'),
+            'user_id': post.user_id
+        })
+    
+    return render_template('community.html', 
+                         posts=posts_data,
+                         current_user=current_user)
 
 
-@app.route('/community')
-def community():
-    # Mock posts
-    posts = [
-        {'id': 1, 'author': 'Ramesh Kumar', 'title': 'Best time to sell wheat in Punjab', 'excerpt': 'Based on my experience...', 'likes': 15},
-        {'id': 2, 'author': 'Suresh Patel', 'title': 'Transport costs from Haryana to Delhi', 'excerpt': 'I recently transported...', 'likes': 8},
-    ]
-    return render_template('community.html', posts=posts,current_user=current_user)
+@app.route('/community/like/<int:post_id>', methods=['POST'])
+def like_post(post_id):
+    if not current_user['is_authenticated']:
+        return {'success': False, 'message': 'Please login to like posts'}, 401
+    
+    try:
+        post = CommunityPost.query.get_or_404(post_id)
+        
+        # Get or create user likes tracking (you can add a separate table for this)
+        # For simplicity, we'll just increment/decrement likes
+        action = request.json.get('action')  # 'like' or 'unlike'
+        
+        if action == 'like':
+            post.likes += 1
+        elif action == 'unlike' and post.likes > 0:
+            post.likes -= 1
+        
+        db.session.commit()
+        
+        return {'success': True, 'likes': post.likes}, 200
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return {'success': False, 'message': 'Error updating likes'}, 500
 
-@app.route('/schemes')
-def schemes():
-    # Mock schemes
-    schemes = [
-        {'name': 'PM-KISAN', 'description': 'Direct income support to farmers', 'type': 'Central', 'applicable': 'All farmers'},
-        {'name': 'Crop Insurance Scheme', 'description': 'Insurance against crop failure', 'type': 'Central', 'applicable': 'All crops'},
-    ]
-    return render_template('schemes.html', schemes=schemes,current_user=current_user)
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Get user's submissions count (community posts)
+    posts_count = CommunityPost.query.filter_by(user_id=current_user['id']).count()
+    
+    # Get user's recent posts
+    recent_posts = CommunityPost.query\
+        .filter_by(user_id=current_user['id'])\
+        .order_by(CommunityPost.created_at.desc())\
+        .limit(5)\
+        .all()
+    
+    # Calculate total likes received
+    total_likes = db.session.query(db.func.sum(CommunityPost.likes))\
+        .filter_by(user_id=current_user['id'])\
+        .scalar() or 0
+    
+    return render_template('dashboard.html', 
+                         current_user=current_user,
+                         user_type=current_user['details'].user_type,
+                         posts_count=posts_count,
+                         recent_posts=recent_posts,
+                         total_likes=total_likes)
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    # Get user statistics
+    posts_count = CommunityPost.query.filter_by(user_id=current_user['id']).count()
+    
+    # Calculate total likes received
+    total_likes = db.session.query(db.func.sum(CommunityPost.likes))\
+        .filter_by(user_id=current_user['id'])\
+        .scalar() or 0
+    
+    return render_template('profile.html', 
+                         user=current_user['details'],
+                         current_user=current_user,
+                         posts_count=posts_count,
+                         total_likes=total_likes)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -625,7 +745,7 @@ def login():
             
             # next_page = request.args.get('next')
             # return redirect(url_for('home',current_user=current_user)) if next_page else redirect(url_for('dashboard'))
-            return redirect(url_for('home',current_user=current_user))
+            return redirect(url_for('home'))
         else:
             flash('Invalid email or password. Please try again.', 'danger')
     
@@ -674,27 +794,27 @@ def register():
     return render_template('register.html', states=MOCK_STATES, crops=MOCK_CROPS,current_user=current_user)
 
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    # Get user's submissions count
-    submissions_count = FarmerInput.query.filter_by(user_id=current_user['id']).count()
+# @app.route('/dashboard')
+# @login_required
+# def dashboard():
+#     # Get user's submissions count
+#     submissions_count = FarmerInput.query.filter_by(user_id=current_user['id']).count()
     
-    # Get user's recent activity
-    recent_inputs = FarmerInput.query.filter_by(user_id=current_user['id'])\
-        .order_by(FarmerInput.created_at.desc()).limit(5).all()
+#     # Get user's recent activity
+#     recent_inputs = FarmerInput.query.filter_by(user_id=current_user['id'])\
+#         .order_by(FarmerInput.created_at.desc()).limit(5).all()
     
-    return render_template('dashboard.html', 
-                           current_user=current_user,
-                         user_type=current_user['details'].user_type,
-                         submissions_count=submissions_count,
-                         recent_inputs=recent_inputs)
+#     return render_template('dashboard.html', 
+#                            current_user=current_user,
+#                          user_type=current_user['details'].user_type,
+#                          submissions_count=submissions_count,
+#                          recent_inputs=recent_inputs)
 
-@app.route('/profile')
-@login_required
-def profile():
+# @app.route('/profile')
+# @login_required
+# def profile():
 
-    return render_template('profile.html', user=current_user['details'],current_user=current_user)
+#     return render_template('profile.html', user=current_user['details'],current_user=current_user)
 
 @app.route('/logout')
 # @login_required

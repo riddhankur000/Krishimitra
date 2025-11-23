@@ -1,14 +1,10 @@
-
-<!-- ============================================ -->
-<!-- templates/dashboard.html -->
-<!-- ============================================ -->
 {% extends "base.html" %}
 {% block title %}Dashboard - Krishimitra{% endblock %}
 {% block content %}
 <div class="page-header">
     <div class="container">
         <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-        <p>Welcome back, {{ session.user_name }}!</p>
+        <p>Welcome back, {{ current_user.name }}!</p>
     </div>
 </div>
 
@@ -18,57 +14,89 @@
 
         <div class="grid grid-4">
             <div class="card text-center">
+                <i class="fas fa-comments fa-2x text-primary mb-1"></i>
+                <h2>{{ posts_count }}</h2>
+                <p>Community Posts</p>
+            </div>
+            <div class="card text-center">
+                <i class="fas fa-thumbs-up fa-2x text-primary mb-1"></i>
+                <h2>{{ total_likes }}</h2>
+                <p>Total Likes Received</p>
+            </div>
+            <div class="card text-center">
                 <i class="fas fa-chart-line fa-2x text-primary mb-1"></i>
-                <h2>15</h2>
-                <p>Data Submissions</p>
+                <h2>Active</h2>
+                <p>Account Status</p>
             </div>
             <div class="card text-center">
-                <i class="fas fa-rupee-sign fa-2x text-primary mb-1"></i>
-                <h2>₹2,500</h2>
-                <p>Avg Price (Last Month)</p>
-            </div>
-            <div class="card text-center">
-                <i class="fas fa-star fa-2x text-primary mb-1"></i>
-                <h2>92</h2>
-                <p>Reputation Score</p>
-            </div>
-            <div class="card text-center">
-                <i class="fas fa-bookmark fa-2x text-primary mb-1"></i>
-                <h2>8</h2>
-                <p>Saved Searches</p>
+                <i class="fas fa-calendar fa-2x text-primary mb-1"></i>
+                <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
+                <p>Member Since</p>
             </div>
         </div>
 
         <div class="grid grid-2 mt-3">
             <div class="card">
-                <h3>Your Recent Activity</h3>
+                <h3><i class="fas fa-history"></i> Your Recent Activity</h3>
+                
+                {% if recent_posts %}
                 <ul style="list-style: none; padding: 0;">
+                    {% for post in recent_posts %}
                     <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);">
-                        <i class="fas fa-upload" style="color: var(--primary-color);"></i>
-                        Submitted price data for Wheat - 2 days ago
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <i class="fas fa-comment" style="color: var(--primary-color);"></i>
+                                <strong>{{ post.title }}</strong>
+                                <p style="margin: 0.3rem 0 0 1.5rem; color: var(--text-light); font-size: 0.9rem;">
+                                    {{ post.content[:80] }}{% if post.content|length > 80 %}...{% endif %}
+                                </p>
+                                <small style="color: var(--text-light); margin-left: 1.5rem;">
+                                    <i class="fas fa-clock"></i> {{ post.created_at.strftime('%b %d, %Y') }}
+                                </small>
+                            </div>
+                            <span style="color: var(--primary-color);">
+                                <i class="fas fa-thumbs-up"></i> {{ post.likes }}
+                            </span>
+                        </div>
                     </li>
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);">
-                        <i class="fas fa-calculator" style="color: var(--primary-color);"></i>
-                        Used transport calculator - 5 days ago
-                    </li>
-                    <li style="padding: 0.8rem 0;">
-                        <i class="fas fa-comment" style="color: var(--primary-color);"></i>
-                        Posted in community forum - 1 week ago
-                    </li>
+                    {% endfor %}
                 </ul>
+                {% else %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                    <i class="fas fa-inbox fa-2x" style="margin-bottom: 0.5rem;"></i>
+                    <p>No recent activity. Start by posting in the community!</p>
+                    <a href="{{ url_for('community') }}" class="btn btn-primary mt-1">
+                        <i class="fas fa-plus"></i> Create Post
+                    </a>
+                </div>
+                {% endif %}
             </div>
 
             <div class="card">
-                <h3>Personalized Recommendations</h3>
+                <h3><i class="fas fa-lightbulb"></i> Quick Actions</h3>
+                
                 <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
-                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">Best Mandi Today</h4>
-                    <p>Mumbai APMC is offering ₹7,500/quintal for Cotton - 15% higher than average!</p>
-                    <a href="/transport-calculator" class="btn btn-primary">Calculate Profit</a>
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                        <i class="fas fa-chart-bar"></i> Check Market Prices
+                    </h4>
+                    <p style="margin: 0.5rem 0;">View current prices across different mandis and regions</p>
+                    <a href="{{ url_for('prices') }}" class="btn btn-primary">View Prices</a>
                 </div>
+                
+                <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                        <i class="fas fa-calculator"></i> Transport Calculator
+                    </h4>
+                    <p style="margin: 0.5rem 0;">Calculate profit margins for different mandis</p>
+                    <a href="{{ url_for('transport_calculator') }}" class="btn btn-primary">Calculate</a>
+                </div>
+                
                 <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
-                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">New Scheme Alert</h4>
-                    <p>PM-KISAN next installment releasing on Nov 15, 2025</p>
-                    <a href="/schemes" class="btn btn-primary">View Schemes</a>
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                        <i class="fas fa-users"></i> Join Community
+                    </h4>
+                    <p style="margin: 0.5rem 0;">Share experiences with fellow farmers</p>
+                    <a href="{{ url_for('community') }}" class="btn btn-primary">Go to Community</a>
                 </div>
             </div>
         </div>
@@ -78,50 +106,78 @@
         <div class="grid grid-4">
             <div class="card text-center">
                 <i class="fas fa-database fa-2x text-primary mb-1"></i>
-                <h2>5,234</h2>
-                <p>Data Points</p>
+                <h2>{{ posts_count }}</h2>
+                <p>Community Posts</p>
             </div>
             <div class="card text-center">
-                <i class="fas fa-map-marked-alt fa-2x text-primary mb-1"></i>
-                <h2>12</h2>
-                <p>Regions Tracked</p>
+                <i class="fas fa-chart-line fa-2x text-primary mb-1"></i>
+                <h2>Active</h2>
+                <p>Account Status</p>
             </div>
             <div class="card text-center">
-                <i class="fas fa-exclamation-triangle fa-2x text-primary mb-1"></i>
-                <h2>3</h2>
-                <p>Price Alerts</p>
+                <i class="fas fa-calendar fa-2x text-primary mb-1"></i>
+                <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
+                <p>Member Since</p>
             </div>
             <div class="card text-center">
-                <i class="fas fa-download fa-2x text-primary mb-1"></i>
-                <h2>45</h2>
-                <p>Exports</p>
+                <i class="fas fa-thumbs-up fa-2x text-primary mb-1"></i>
+                <h2>{{ total_likes }}</h2>
+                <p>Total Likes</p>
             </div>
         </div>
 
         <div class="card mt-3">
-            <h3>Regional Disparity Alerts</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Crop</th>
-                        <th>High Price Region</th>
-                        <th>Low Price Region</th>
-                        <th>Disparity</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Cotton</td>
-                        <td>Maharashtra (₹7,500)</td>
-                        <td>Punjab (₹5,200)</td>
-                        <td style="color: red; font-weight: bold;">44%</td>
-                        <td><button class="btn">Analyze</button></td>
-                    </tr>
-                </tbody>
-            </table>
+            <h3><i class="fas fa-tools"></i> Available Tools</h3>
+            <div class="grid grid-3" style="gap: 1rem; margin-top: 1rem;">
+                <div style="background-color: var(--light-bg); padding: 1.5rem; border-radius: 5px; text-align: center;">
+                    <i class="fas fa-chart-bar fa-2x text-primary mb-1"></i>
+                    <h4>Market Analysis</h4>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Access comprehensive market price data</p>
+                    <a href="{{ url_for('prices') }}" class="btn btn-primary mt-1">View Prices</a>
+                </div>
+                
+                <div style="background-color: var(--light-bg); padding: 1.5rem; border-radius: 5px; text-align: center;">
+                    <i class="fas fa-calculator fa-2x text-primary mb-1"></i>
+                    <h4>Analytics Tools</h4>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Calculate transport costs and margins</p>
+                    <a href="{{ url_for('transport_calculator') }}" class="btn btn-primary mt-1">Use Calculator</a>
+                </div>
+                
+                <div style="background-color: var(--light-bg); padding: 1.5rem; border-radius: 5px; text-align: center;">
+                    <i class="fas fa-users fa-2x text-primary mb-1"></i>
+                    <h4>Community Insights</h4>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Engage with farmer community</p>
+                    <a href="{{ url_for('community') }}" class="btn btn-primary mt-1">Visit Community</a>
+                </div>
+            </div>
         </div>
         {% endif %}
     </div>
 </section>
+
+<style>
+.text-center {
+    text-align: center;
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.mb-1 {
+    margin-bottom: 1rem;
+}
+
+.mt-1 {
+    margin-top: 1rem;
+}
+
+.mt-2 {
+    margin-top: 2rem;
+}
+
+.mt-3 {
+    margin-top: 3rem;
+}
+</style>
 {% endblock %}

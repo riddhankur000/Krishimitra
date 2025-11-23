@@ -123,38 +123,67 @@
 
                     <div class="grid grid-2" style="gap: 1rem;">
                         <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
-                            <i class="fas fa-upload fa-2x text-primary mb-1"></i>
-
-                            <h2 style="margin: 0.5rem 0;"></h2>
-                            <p style="margin: 0; color: var(--text-light);">Data Submissions</p>
+                            <i class="fas fa-comments fa-2x text-primary mb-1"></i>
+                            <h2 style="margin: 0.5rem 0;">{{ posts_count }}</h2>
+                            <p style="margin: 0; color: var(--text-light);">Community Posts</p>
                         </div>
 
                         <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
-                            <i class="fas fa-comments fa-2x text-primary mb-1"></i>
-
-                            <p style="margin: 0; color: var(--text-light);">Forum Posts</p>
+                            <i class="fas fa-thumbs-up fa-2x text-primary mb-1"></i>
+                            <h2 style="margin: 0.5rem 0;">{{ total_likes }}</h2>
+                            <p style="margin: 0; color: var(--text-light);">Likes Received</p>
                         </div>
                     </div>
                 </div>
             </div>
             {% else %}
             <!-- NGO/Trader Information -->
-            <div class="card">
-                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
-                    <i class="fas fa-briefcase"></i> Organization Details
-                </h3>
+            <div>
+                <div class="card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        <i class="fas fa-briefcase"></i> Organization Details
+                    </h3>
+                    
+                    <p style="color: var(--text-dark); line-height: 1.6; margin-bottom: 1.5rem;">
+                        As a {{ user.user_type }}, you have access to aggregated market data and analytics tools to help you understand agricultural market trends and farmer perspectives.
+                    </p>
+                    
+                    <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                            <i class="fas fa-chart-line"></i> Market Analytics
+                        </h4>
+                        <p style="margin: 0.5rem 0; color: var(--text-light);">Access real-time and historical market price data</p>
+                        <a href="{{ url_for('prices') }}" class="btn btn-primary" style="margin-top: 0.5rem;">View Prices</a>
+                    </div>
+                    
+                    <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                            <i class="fas fa-users"></i> Community Insights
+                        </h4>
+                        <p style="margin: 0.5rem 0; color: var(--text-light);">Engage with farmers and understand ground realities</p>
+                        <a href="{{ url_for('community') }}" class="btn btn-primary" style="margin-top: 0.5rem;">Visit Community</a>
+                    </div>
+                </div>
                 
-                <p style="color: var(--text-light);">
-                    As a {{ user.user_type }}, you have access to aggregated market data and analytics tools.
-                </p>
+                <!-- Activity Statistics for NGO/Trader -->
+                <div class="card mt-2">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        <i class="fas fa-chart-bar"></i> Your Activity
+                    </h3>
 
-                <div class="mt-2">
-                    <a href="{{ url_for('compare_region') }}" class="btn btn-primary" style="display: block; margin-bottom: 1rem;">
-                        <i class="fas fa-map-marked-alt"></i> View Regional Analysis
-                    </a>
-                    <a href="{{ url_for('prices') }}" class="btn btn-primary" style="display: block;">
-                        <i class="fas fa-chart-line"></i> Market Prices
-                    </a>
+                    <div class="grid grid-2" style="gap: 1rem;">
+                        <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                            <i class="fas fa-comments fa-2x text-primary mb-1"></i>
+                            <h2 style="margin: 0.5rem 0;">{{ posts_count }}</h2>
+                            <p style="margin: 0; color: var(--text-light);">Community Posts</p>
+                        </div>
+
+                        <div style="text-align: center; background-color: var(--light-bg); padding: 1rem; border-radius: 5px;">
+                            <i class="fas fa-thumbs-up fa-2x text-primary mb-1"></i>
+                            <h2 style="margin: 0.5rem 0;">{{ total_likes }}</h2>
+                            <p style="margin: 0; color: var(--text-light);">Likes Received</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endif %}
@@ -168,13 +197,11 @@
                 <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
                     <i class="fas fa-tachometer-alt"></i> Go to Dashboard
                 </a>
-                {% if user.user_type == 'farmer' %}
-                <a href="{{ url_for('farmer_input') }}" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Submit Data
-                </a>
-                {% endif %}
                 <a href="{{ url_for('prices') }}" class="btn btn-primary">
                     <i class="fas fa-chart-line"></i> View Prices
+                </a>
+                <a href="{{ url_for('community') }}" class="btn btn-primary">
+                    <i class="fas fa-users"></i> Community
                 </a>
             </div>
         </div>
@@ -204,6 +231,22 @@
 .profile-info-item p {
     margin: 0;
     color: var(--text-light);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.mb-1 {
+    margin-bottom: 1rem;
+}
+
+.mt-2 {
+    margin-top: 2rem;
+}
+
+.mt-3 {
+    margin-top: 3rem;
 }
 </style>
 {% endblock %}

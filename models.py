@@ -27,8 +27,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
-    farmer_inputs = db.relationship('FarmerInput', backref='user', lazy=True)
-    posts = db.relationship('CommunityPost', backref='author', lazy=True)
+    posts = db.relationship('CommunityPost', backref='author', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         """Hash and set the user's password"""
@@ -48,24 +47,6 @@ class User(UserMixin, db.Model):
         return f'<User {self.email}>'
 
 
-class FarmerInput(db.Model):
-    __tablename__ = 'farmer_inputs'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    crop = db.Column(db.String(50), nullable=False)
-    quantity = db.Column(db.Float, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    mandi = db.Column(db.String(100), nullable=False)
-    sale_date = db.Column(db.Date, nullable=False)
-    notes = db.Column(db.Text)
-    photo_path = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<FarmerInput {self.crop} by User {self.user_id}>'
-
-
 class CommunityPost(db.Model):
     __tablename__ = 'community_posts'
     
@@ -80,20 +61,3 @@ class CommunityPost(db.Model):
     
     def __repr__(self):
         return f'<Post {self.title}>'
-
-
-class MarketPrice(db.Model):
-    __tablename__ = 'market_prices'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    state = db.Column(db.String(50), nullable=False)
-    apmc = db.Column(db.String(100), nullable=False)
-    commodity = db.Column(db.String(50), nullable=False)
-    min_price = db.Column(db.Float, nullable=False)
-    modal_price = db.Column(db.Float, nullable=False)
-    max_price = db.Column(db.Float, nullable=False)
-    recorded_date = db.Column(db.Date, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<MarketPrice {self.commodity} at {self.apmc}>'
