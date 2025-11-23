@@ -767,5 +767,11 @@ def terms_privacy():
 with app.app_context():
     db.create_all()
 
+import os
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Get the port from Render's environment variable, default to 5000 for local testing
+    port = int(os.environ.get("PORT", 5000))
+    
+    # host='0.0.0.0' is required for the app to be visible on Render
+    app.run(host='0.0.0.0', port=port, debug=False) # Turn off debug in production!
