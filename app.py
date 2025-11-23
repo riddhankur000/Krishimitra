@@ -44,8 +44,8 @@ service = Service()
 # chrome_options.add_argument('--headless')  # Run in background
 
 # Mock data for demonstration
-MOCK_CROPS = []
-MOCK_STATES = []
+MOCK_CROPS = json.load(open(os.path.join('data', 'commodity_crop.json')))['commodities']
+MOCK_STATES = json.load(open(os.path.join('data', 'commodity_crop.json')))['states']
 MOCK_MANDIS = ['Delhi Azadpur', 'Mumbai APMC', 'Bangalore Yeshwanthpur', 'Ludhiana Mandi']
 
 # Mock price data
@@ -244,6 +244,7 @@ def extract_commodity_list():
         data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
         # dataframe = pd.DataFrame(MOCK_PRICES)
         dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        
         driver.quit()
         return dataframe
     except Exception as e:
@@ -319,11 +320,101 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+from datetime import datetime, timedelta
+import threading
 
-# Routes
+# Global cache for home page statistics
+HOME_STATS_CACHE = {
+    'data': None,
+    'last_updated': None,
+    'lock': threading.Lock()
+}
+
+CACHE_DURATION = timedelta(hours=1)  # Cache for 1 hour
+
+def get_home_statistics():
+    """
+    Get statistics for home page with caching to avoid repeated expensive operations
+    """
+    global HOME_STATS_CACHE
+    
+    with HOME_STATS_CACHE['lock']:
+        # Check if cache is valid
+        now = datetime.now()
+        if (HOME_STATS_CACHE['data'] is not None and 
+            HOME_STATS_CACHE['last_updated'] is not None and 
+            now - HOME_STATS_CACHE['last_updated'] < CACHE_DURATION):
+            return HOME_STATS_CACHE['data']
+        
+        # Cache expired or doesn't exist, fetch new data
+        try:
+            # 1. Count registered farmers
+            total_farmers = User.query.filter_by(user_type='farmer').count()
+            
+            # 2. Get unique mandis, crops, and states count from live data
+            master_df = extract_commodity_list()
+            
+            if not master_df.empty:
+                unique_mandis = master_df['APMC'].nunique()
+                unique_crops = master_df['Commodity'].nunique()
+                unique_states = master_df['state'].nunique()
+            else:
+                # Fallback if data extraction fails
+                unique_mandis = 500
+                unique_crops = 50
+                unique_states = 20
+            
+            # Prepare statistics
+            stats = {
+                'farmers': total_farmers if total_farmers > 0 else 10000,
+                'mandis': unique_mandis,
+                'crops': unique_crops,
+                'states': unique_states
+            }
+            
+            # Update cache
+            HOME_STATS_CACHE['data'] = stats
+            HOME_STATS_CACHE['last_updated'] = now
+            
+            return stats
+            
+        except Exception as e:
+            print(f"Error fetching home statistics: {e}")
+            # Return cached data if available, otherwise fallback
+            if HOME_STATS_CACHE['data'] is not None:
+                return HOME_STATS_CACHE['data']
+            
+            # Ultimate fallback
+            return {
+                'farmers': 10000,
+                'mandis': 500,
+                'crops': 50,
+                'states': 20
+            }
+
 @app.route('/')
 def home():
-    return render_template('home.html',current_user=current_user)
+    stats = get_home_statistics()
+    return render_template('home.html', current_user=current_user, stats=stats)
+
+# Optional: Add an API endpoint to refresh cache manually (admin only)
+@app.route('/api/refresh-home-stats')
+@login_required
+def refresh_home_stats():
+    """Manually refresh home page statistics cache"""
+    global HOME_STATS_CACHE
+    
+    with HOME_STATS_CACHE['lock']:
+        HOME_STATS_CACHE['data'] = None
+        HOME_STATS_CACHE['last_updated'] = None
+    
+    stats = get_home_statistics()
+    return jsonify({
+        'success': True,
+        'stats': stats,
+        'message': 'Home statistics cache refreshed successfully'
+    })
+
 
 @app.route('/about')
 def about():

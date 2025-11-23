@@ -151,6 +151,10 @@
                     <canvas id="priceTrendChart"></canvas>
                 </div>
             </div>
+            {%else %}
+                <div>
+                    <h5><i>No historical data forund for {{commodity_filter}} in {{state_filter}}.</i></h5>
+                </div>
             {% endif %}
         </div>
         {% endif %}

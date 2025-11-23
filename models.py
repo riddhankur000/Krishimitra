@@ -61,3 +61,7 @@ class CommunityPost(db.Model):
     
     def __repr__(self):
         return f'<Post {self.title}>'
+    
+
+# Add this to models.py
+

@@ -38,18 +38,7 @@
                                         <i class="fas fa-clock"></i> {{ post.created_at }}
                                     </span>
                                 </small>
-                                <div>
-                                    {% if current_user.is_authenticated %}
-                                    <button class="like-btn" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; padding: 0.5rem;">
-                                        <i class="fas fa-thumbs-up" style="color: var(--primary-color);"></i> 
-                                        <span class="like-count">{{ post.likes }}</span>
-                                    </button>
-                                    {% else %}
-                                    <span style="color: var(--text-light);">
-                                        <i class="fas fa-thumbs-up"></i> {{ post.likes }}
-                                    </span>
-                                    {% endif %}
-                                </div>
+                                
                             </div>
                         </div>
                         {% endfor %}
