@@ -132,7 +132,6 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         print(f"Bar Chart Data Error: {e}")
         return None
 
-
 # --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
     try:
