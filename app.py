@@ -53,7 +53,7 @@ MOCK_PRICES = [
     {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
 ]
 
-COMMODITY_MAP=json.load(open('../data/commodity_mapping.json'))
+COMMODITY_MAP=json.load(open(r'data\commodity_mapping.json'))
 
 def get_bar_chart_data(master_df, state_name, commodity_name):
     try:
@@ -128,7 +128,7 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
 # --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
     try:
-        csv_path = '../data/agmarknet_india_historical_prices_2024_2025.csv' 
+        csv_path = r'data\agmarknet_india_historical_prices_2024_2025.csv' 
         if not os.path.exists(csv_path):
             return None, "Dataset not found."
 
