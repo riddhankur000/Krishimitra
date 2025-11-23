@@ -28,7 +28,7 @@ matplotlib.use('Agg') # Prevents GUI errors
 
 chrome_options = Options()
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-# chrome_options.add_argument('--headless')  # Run in background
+chrome_options.add_argument('--headless')  # Run in background
 
 
 # REMOVE: Service(ChromeDriverManager().install())
@@ -53,7 +53,7 @@ MOCK_PRICES = [
     {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
 ]
 
-COMMODITY_MAP=json.load(open(r'D:\STUDY\IITB MS\CS 699\project\krishimitra\data\commodity_mapping.json'))
+COMMODITY_MAP=json.load(open('../data/commodity_mapping.json'))
 
 def get_bar_chart_data(master_df, state_name, commodity_name):
     try:
@@ -128,7 +128,7 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
 # --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
     try:
-        csv_path = 'D:/STUDY/IITB MS/CS 699/project/krishimitra/data/agmarknet_india_historical_prices_2024_2025.csv' 
+        csv_path = '../data/agmarknet_india_historical_prices_2024_2025.csv' 
         if not os.path.exists(csv_path):
             return None, "Dataset not found."
 
@@ -204,10 +204,8 @@ def get_historical_data(state_name, commodity_name):
         return None, "Error processing data"
     
 
-# ... (Keep your extract_commodity_list and extract_commodity_data functions EXACTLY as they were) ...
 def extract_commodity_list():
-    # ... [Insert your existing extraction code here] ...
-    # For brevity I am assuming you keep the code you provided previously
+
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         url = 'https://enam.gov.in/web/dashboard/live_price'
@@ -246,7 +244,7 @@ def extract_commodity_list():
         return pd.DataFrame()
 
 def extract_commodity_data(commodity_name):
-    # ... [Keep your existing code here] ...
+
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         url = 'https://enam.gov.in/web/dashboard/live_price'
@@ -283,13 +281,12 @@ def extract_commodity_data(commodity_name):
         return []
     
 
-# Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishimitra.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize extensions
+
 db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -324,8 +321,7 @@ def home():
 def about():
     return render_template('about.html',current_user=current_user)
 
-# @app.route('/prices', methods=['GET', 'POST'])
-# @app.route('/prices', methods=['GET', 'POST'])
+
 @app.route('/prices', methods=['GET', 'POST'])
 def prices():
     show_graph=False
@@ -373,10 +369,9 @@ def prices():
         # --- CHART LOGIC ---
         if commodity_filter and state_filter:
             show_graph=True
-            # 1. Historical Line Chart (Your existing logic)
+
             historical_chart_data, historical_msg = get_historical_data(state_filter, commodity_filter)
             
-            # 2. Bar Charts (New logic using master_df from live scrape)
             bar_chart_data = get_bar_chart_data(master_df, state_filter, commodity_filter)
             print(bar_chart_data)
         elif commodity_filter or state_filter:
@@ -410,8 +405,6 @@ def transport_calculator():
     show_calc = False
     
     # --- 1. Data Extraction ---
-    # NOTE: calling this on every request is very slow. 
-    # Ideally, cache this data or load from a CSV saved by a background job.
     master_df = extract_commodity_list() 
     
     # --- 2. Data Cleaning & Setup ---
@@ -426,16 +419,13 @@ def transport_calculator():
             errors='coerce'
         ).fillna(0)
         
-        # Standardize State and Create Display Name
         master_df['state'] = master_df['state'].str.upper().str.strip()
         master_df['mandi_display'] = master_df['APMC'] + ", " + master_df['state'].str.title()
 
-        # Create Mappings
         crop_to_mandi = master_df.groupby('Commodity')['mandi_display'].apply(
             lambda x: sorted(list(set(x)))
         ).to_dict()
         
-        # Create Price Lookup: {Crop: {Mandi_Display: Price}}
         for _, row in master_df.iterrows():
             crop = row['Commodity']
             mandi_key = row['mandi_display'] 
@@ -460,7 +450,6 @@ def transport_calculator():
             selected_mandi_full = request.form.get('to_mandi')  # Format: "APMC, State"
             from_location = request.form.get('from_location')
             
-            # Use float() with default 0 to prevent crashes on empty inputs
             quantity = float(request.form.get('quantity') or 0)
             price = float(request.form.get('price') or 0)
             distance = float(request.form.get('distance') or 0)
@@ -490,13 +479,11 @@ def transport_calculator():
                 'profit_per_qtl': profit_per_qtl
             }
 
-            # --- COMPARISON LOGIC (Top 5 Opportunities) ---
             if not master_df.empty and selected_crop:
                 # Filter by Crop
                 crop_df = master_df[master_df['Commodity'] == selected_crop].copy()
                 
                 if not crop_df.empty:
-                    # 1. Top 5 India (Sorted by Highest Price)
                     df_india = crop_df.sort_values(by='Modal_Price', ascending=False).head(5)
                     
                     for _, row in df_india.iterrows():
@@ -507,7 +494,6 @@ def transport_calculator():
                             'rate_per_km': rate_per_km  # Pass rate to frontend
                         })
 
-                    # 2. Top 5 Selected State
                     df_state = crop_df[crop_df['state'] == selected_state_name].sort_values(by='Modal_Price', ascending=False).head(5)
                     
                     for _, row in df_state.iterrows():
@@ -518,7 +504,6 @@ def transport_calculator():
                             'rate_per_km': rate_per_km  # Pass rate to frontend
                         })
 
-                    # Prepare Data for Charts - ONLY IF WE HAVE DATA
                     if top_5_india:
                         chart_data = {
                             'india_labels': [item['APMC'].split(',')[0] for item in top_5_india],
@@ -548,43 +533,6 @@ def transport_calculator():
                            top_5_state=top_5_state,
                            chart_data=chart_data)
 
-# @app.route('/compare-region')
-# def compare_region():
-#     return render_template('compare_region.html', 
-#                            current_user=current_user,
-#                          crops=MOCK_CROPS,
-#                          states=MOCK_STATES)
-
-# @app.route('/farmer-input', methods=['GET', 'POST'])
-# @login_required
-# def farmer_input():
-#     if request.method == 'POST':
-#         try:
-#             new_input = FarmerInput(
-#                 user_id=current_user.id,
-#                 crop=request.form.get('crop'),
-#                 quantity=float(request.form.get('quantity')),
-#                 price=float(request.form.get('price')),
-#                 mandi=request.form.get('mandi'),
-#                 sale_date=datetime.strptime(request.form.get('date'), '%Y-%m-%d').date(),
-#                 notes=request.form.get('notes')
-#             )
-#             db.session.add(new_input)
-#             db.session.commit()
-#             flash('Thank you! Your data has been submitted successfully.', 'success')
-#         except Exception as e:
-#             db.session.rollback()
-#             flash('Error submitting data. Please try again.', 'danger')
-#             print(f"Error: {e}")
-#         return redirect(url_for('farmer_input',current_user=current_user))
-    
-#     return render_template('farmer_input.html', 
-#                            current_user=current_user,
-#                          crops=MOCK_CROPS,
-#                          mandis=MOCK_MANDIS)
-
-
-# Add these routes to your app.py file (replace the existing community route)
 
 @app.route('/community', methods=['GET', 'POST'])
 def community():
@@ -659,8 +607,6 @@ def like_post(post_id):
     try:
         post = CommunityPost.query.get_or_404(post_id)
         
-        # Get or create user likes tracking (you can add a separate table for this)
-        # For simplicity, we'll just increment/decrement likes
         action = request.json.get('action')  # 'like' or 'unlike'
         
         if action == 'like':
@@ -680,7 +626,6 @@ def like_post(post_id):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Get user's submissions count (community posts)
     posts_count = CommunityPost.query.filter_by(user_id=current_user['id']).count()
     
     # Get user's recent posts
@@ -794,30 +739,7 @@ def register():
     return render_template('register.html', states=MOCK_STATES, crops=MOCK_CROPS,current_user=current_user)
 
 
-# @app.route('/dashboard')
-# @login_required
-# def dashboard():
-#     # Get user's submissions count
-#     submissions_count = FarmerInput.query.filter_by(user_id=current_user['id']).count()
-    
-#     # Get user's recent activity
-#     recent_inputs = FarmerInput.query.filter_by(user_id=current_user['id'])\
-#         .order_by(FarmerInput.created_at.desc()).limit(5).all()
-    
-#     return render_template('dashboard.html', 
-#                            current_user=current_user,
-#                          user_type=current_user['details'].user_type,
-#                          submissions_count=submissions_count,
-#                          recent_inputs=recent_inputs)
-
-# @app.route('/profile')
-# @login_required
-# def profile():
-
-#     return render_template('profile.html', user=current_user['details'],current_user=current_user)
-
 @app.route('/logout')
-# @login_required
 def logout():
     logout_user()
     flash('Logged out successfully.', 'info')
