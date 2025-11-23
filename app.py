@@ -82,20 +82,22 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         state_df = national_df[national_df['state'].str.upper() == state_name].copy()
         
         # --- STATE DATA PREPARATION ---
-        if state_df.empty:
+        if state_df.empty or len(state_df) == 0:
+            # No state data available
             state_avg = 0
-            # Initialize empty lists to prevent errors
             st_asc_labels, st_asc_data = [], []
             st_desc_labels, st_desc_data = [], []
+            has_state_data = False
         else:
             state_avg = round(state_df['Modal_Price'].mean(), 2)
+            has_state_data = True
             
-            # State Cheapest (Ascending)
+            # State Cheapest (Ascending) - Take up to 5
             st_asc = state_df.sort_values(by='Modal_Price', ascending=True).head(5)
             st_asc_labels = st_asc['APMC'].tolist()
             st_asc_data = st_asc['Modal_Price'].tolist()
 
-            # State Costliest (Descending)
+            # State Costliest (Descending) - Take up to 5
             st_desc = state_df.sort_values(by='Modal_Price', ascending=False).head(5)
             st_desc_labels = st_desc['APMC'].tolist()
             st_desc_data = st_desc['Modal_Price'].tolist()
@@ -113,9 +115,10 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         nat_desc_data = nat_desc['Modal_Price'].tolist()
 
         return {
-            "state_name": state_name,
+            "state_name": state_name.title(),
             "national_avg": national_avg,
             "state_avg": state_avg,
+            "has_state_data": has_state_data,  # NEW: Flag to check if state data exists
             # Return 4 distinct datasets
             "state_asc": {"labels": st_asc_labels, "data": st_asc_data},
             "state_desc": {"labels": st_desc_labels, "data": st_desc_data},
@@ -126,7 +129,7 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
     except Exception as e:
         print(f"Bar Chart Data Error: {e}")
         return None
-    
+
 
 # --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
@@ -302,7 +305,8 @@ current_user={'name':None,"id":None,"is_authenticated":False,'details':None}
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return  db.session.get(User, user_id)
+    # return User.query.get(int(user_id))
 
 # Login required decorator
 def login_required(f):
@@ -584,7 +588,8 @@ def community():
     # Convert to list of dicts with author info
     posts_data = []
     for post in posts:
-        author = User.query.get(post.user_id)
+        author = db.session.get(User, post.user_id)
+        # author = User.query.get(post.user_id)
         posts_data.append({
             'id': post.id,
             'title': post.title,
