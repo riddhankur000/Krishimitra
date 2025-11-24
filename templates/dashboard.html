@@ -32,11 +32,6 @@
         <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
         <p>Member Since</p>
       </div>
-      <!-- <div class="card text-center">
-                <i class="fas fa-calendar fa-2x text-primary mb-1"></i>
-                <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
-                <p>Member Since</p>
-            </div> -->
     </div>
 
     <div class="grid grid-2 mt-3">
@@ -97,13 +92,6 @@
             <i class="fas fa-plus"></i> Create Post
           </a>
         </div>
-        <!-- <div style="text-align: center; padding: 2rem; color: var(--text-light);">
-                    <i class="fas fa-inbox fa-2x" style="margin-bottom: 0.5rem;"></i>
-                    <p>No recent activity. Start by posting in the community!</p>
-                    <a href="{{ url_for('community') }}" class="btn btn-primary mt-1">
-                        <i class="fas fa-plus"></i> Create Post
-                    </a>
-                </div> -->
         {% endif %}
       </div>
 
@@ -150,14 +138,6 @@
           >
         </div>
 
-        <!-- <div style="background-color: var(--light-bg); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
-                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
-                        <i class="fas fa-calculator"></i> Transport Calculator
-                    </h4>
-                    <p style="margin: 0.5rem 0;">Calculate profit margins for different mandis</p>
-                    <a href="{{ url_for('transport_calculator') }}" class="btn btn-primary">Calculate</a>
-                </div> -->
-
         <div
           style="
             background-color: var(--light-bg);
@@ -194,11 +174,6 @@
         <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
         <p>Member Since</p>
       </div>
-      <!-- <div class="card text-center">
-                <i class="fas fa-calendar fa-2x text-primary mb-1"></i>
-                <h2>{{ current_user.details.created_at.strftime('%b %Y') }}</h2>
-                <p>Member Since</p>
-            </div> -->
       <div class="card text-center">
         <i class="fas fa-thumbs-up fa-2x text-primary mb-1"></i>
         <h2>{{ total_likes }}</h2>
@@ -246,13 +221,6 @@
             >Use Calculator</a
           >
         </div>
-
-        <!-- <div style="background-color: var(--light-bg); padding: 1.5rem; border-radius: 5px; text-align: center;">
-                    <i class="fas fa-calculator fa-2x text-primary mb-1"></i>
-                    <h4>Analytics Tools</h4>
-                    <p style="color: var(--text-light); font-size: 0.9rem;">Calculate transport costs and margins</p>
-                    <a href="{{ url_for('transport_calculator') }}" class="btn btn-primary mt-1">Use Calculator</a>
-                </div> -->
 
         <div
           style="
