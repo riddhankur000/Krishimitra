@@ -113,6 +113,46 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         print(f"Bar Chart Data Error: {e}")
         return None
 
+def extract_commodity_list():
+
+    try:
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        url = 'https://enam.gov.in/web/dashboard/live_price'
+        driver.get(url)
+        wait = WebDriverWait(driver, 20)
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        commodity_radio = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", commodity_radio)
+        commodity_radio.click()
+        time.sleep(2)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        select = soup.find('select', {'id': 'min_max_commodity'})
+        dropdown = wait.until(EC.presence_of_element_located((By.ID, "min_max_commodity")))
+        select = Select(dropdown)
+        wait.until(lambda d: len(Select(dropdown).options) > 1)
+        select.select_by_visible_text("-- All --")
+        time.sleep(3)
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        table = soup.find_all("tbody", class_=lambda c: c and "tbodya" in c)
+        data_list = []
+        for tbody in table:
+            rows = tbody.find_all("tr")
+            for row in rows:
+                cols = [col.text.strip() for col in row.find_all("td")]
+                if cols:
+                    data_list.append(cols)
+        data_rows = data_list[1:]
+        num_cols = 6
+        data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
+        # dataframe = pd.DataFrame(MOCK_PRICES)
+        dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
+        
+        driver.quit()
+        return dataframe
+    except Exception as e:
+        print(f"Error: {e}")
+        return pd.DataFrame()
+
 def get_historical_data(state_name, commodity_name):
     try:
         csv_path = os.path.join('data', 'agmarknet_india_historical_prices_2024_2025.csv')
@@ -186,46 +226,6 @@ def get_historical_data(state_name, commodity_name):
         print(f"Data Error: {e}")
         return None, "Error processing data"
     
-
-def extract_commodity_list():
-
-    try:
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        url = 'https://enam.gov.in/web/dashboard/live_price'
-        driver.get(url)
-        wait = WebDriverWait(driver, 20)
-        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        commodity_radio = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='colorRadio' and @value='blue']")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", commodity_radio)
-        commodity_radio.click()
-        time.sleep(2)
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        select = soup.find('select', {'id': 'min_max_commodity'})
-        dropdown = wait.until(EC.presence_of_element_located((By.ID, "min_max_commodity")))
-        select = Select(dropdown)
-        wait.until(lambda d: len(Select(dropdown).options) > 1)
-        select.select_by_visible_text("-- All --")
-        time.sleep(3)
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        table = soup.find_all("tbody", class_=lambda c: c and "tbodya" in c)
-        data_list = []
-        for tbody in table:
-            rows = tbody.find_all("tr")
-            for row in rows:
-                cols = [col.text.strip() for col in row.find_all("td")]
-                if cols:
-                    data_list.append(cols)
-        data_rows = data_list[1:]
-        num_cols = 6
-        data_rows = [row if len(row) == num_cols else row + ['']*(num_cols-len(row)) for row in data_rows]
-        # dataframe = pd.DataFrame(MOCK_PRICES)
-        dataframe = pd.DataFrame(data_rows, columns=["state", "APMC", "Commodity", "Min_Price", "Modal_Price", "Max_Price"])
-        
-        driver.quit()
-        return dataframe
-    except Exception as e:
-        print(f"Error: {e}")
-        return pd.DataFrame()
 
 def extract_commodity_data(commodity_name):
 
@@ -387,11 +387,6 @@ def refresh_home_stats():
         'stats': stats,
         'message': 'Home statistics cache refreshed successfully'
     })
-
-
-@app.route('/about')
-def about():
-    return render_template('about.html',current_user=current_user)
 
 
 @app.route('/prices', methods=['GET', 'POST'])
@@ -732,36 +727,11 @@ def profile():
                          posts_count=posts_count,
                          total_likes=total_likes)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user['is_authenticated']:
-        return redirect(url_for('dashboard'))
-    
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
-        
-        user = User.query.filter_by(email=email).first()
-        
-        if user and user.check_password(password):
-            login_user(user, remember=remember)
-            user.last_login = datetime.utcnow()
-            db.session.commit()
-            
-            flash(f'Welcome back, {user.full_name}!', 'success')
-            current_user['name']=user.full_name
-            current_user['id']=user.id
-            current_user['is_authenticated']=True
-            current_user['details']=user
-            
-            # next_page = request.args.get('next')
-            # return redirect(url_for('home',current_user=current_user)) if next_page else redirect(url_for('dashboard'))
-            return redirect(url_for('home'))
-        else:
-            flash('Invalid email or password. Please try again.', 'danger')
-    
-    return render_template('login.html',current_user=current_user)
+
+@app.route('/about')
+def about():
+    return render_template('about.html',current_user=current_user)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -805,6 +775,37 @@ def register():
     
     return render_template('register.html', states=MOCK_STATES, crops=MOCK_CROPS,current_user=current_user)
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user['is_authenticated']:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = request.form.get('remember', False)
+        
+        user = User.query.filter_by(email=email).first()
+        
+        if user and user.check_password(password):
+            login_user(user, remember=remember)
+            user.last_login = datetime.utcnow()
+            db.session.commit()
+            
+            flash(f'Welcome back, {user.full_name}!', 'success')
+            current_user['name']=user.full_name
+            current_user['id']=user.id
+            current_user['is_authenticated']=True
+            current_user['details']=user
+            
+            # next_page = request.args.get('next')
+            # return redirect(url_for('home',current_user=current_user)) if next_page else redirect(url_for('dashboard'))
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid email or password. Please try again.', 'danger')
+    
+    return render_template('login.html',current_user=current_user)
 
 @app.route('/logout')
 def logout():

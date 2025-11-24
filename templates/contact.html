@@ -1,82 +1,128 @@
-
 <!-- ============================================ -->
 <!-- templates/contact.html -->
 <!-- ============================================ -->
-{% extends "base.html" %}
-{% block title %}Contact Us - Krishimitra{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Contact Us - Krishimitra{% endblock
+%} {% block content %}
 <div class="page-header">
-    <div class="container">
-        <h1><i class="fas fa-envelope"></i> Contact Us</h1>
-        <p>We're here to help</p>
-    </div>
+  <div class="container">
+    <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+    <p>We're here to help</p>
+  </div>
 </div>
 
 <section>
-    <div class="container">
-        <div class="grid grid-2">
-            <div class="card">
-                <h3>Send us a Message</h3>
-                <form method="post">
-                    <div class="form-group">
-                        <label for="name">Name <span style="color: red;">*</span></label>
-                        <input type="text" id="name" name="name" class="form-control" required>
-                    </div>
+  <div class="container">
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Send us a Message</h3>
+        <form method="post">
+          <div class="form-group">
+            <label for="name">Name <span style="color: red">*</span></label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="form-control"
+              required
+            />
+          </div>
 
-                    <div class="form-group">
-                        <label for="email">Email <span style="color: red;">*</span></label>
-                        <input type="email" id="email" name="email" class="form-control" required>
-                    </div>
+          <div class="form-group">
+            <label for="email">Email <span style="color: red">*</span></label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-control"
+              required
+            />
+          </div>
 
-                    <div class="form-group">
-                        <label for="subject">Subject <span style="color: red;">*</span></label>
-                        <input type="text" id="subject" name="subject" class="form-control" required>
-                    </div>
+          <div class="form-group">
+            <label for="subject"
+              >Subject <span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              class="form-control"
+              required
+            />
+          </div>
 
-                    <div class="form-group">
-                        <label for="message">Message <span style="color: red;">*</span></label>
-                        <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
-                    </div>
+          <div class="form-group">
+            <label for="message"
+              >Message <span style="color: red">*</span></label
+            >
+            <textarea
+              id="message"
+              name="message"
+              class="form-control"
+              rows="5"
+              required
+            ></textarea>
+          </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-paper-plane"></i> Send Message
-                    </button>
-                </form>
-            </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            <i class="fas fa-paper-plane"></i> Send Message
+          </button>
+        </form>
+      </div>
 
-            <div>
-                <div class="card">
-                    <h3>Contact Information</h3>
-                    <div style="margin: 1.5rem 0;">
-                        <i class="fas fa-phone fa-2x text-primary"></i>
-                        <h4 style="margin: 0.5rem 0;">Phone</h4>
-                        <p>+91 1800-XXX-XXXX (Toll Free)</p>
-                    </div>
-                    <div style="margin: 1.5rem 0;">
-                        <i class="fas fa-envelope fa-2x text-primary"></i>
-                        <h4 style="margin: 0.5rem 0;">Email</h4>
-                        <p>info@krishimitra.in<br>support@krishimitra.in</p>
-                    </div>
-                    <div style="margin: 1.5rem 0;">
+      <div>
+        <div class="card">
+          <h3>Contact Information</h3>
+          <div style="margin: 1.5rem 0">
+            <i class="fas fa-phone fa-2x text-primary"></i>
+            <h4 style="margin: 0.5rem 0">Phone</h4>
+            <p>+91 1800-XXX-XXXX (Toll Free)</p>
+          </div>
+          <div style="margin: 1.5rem 0">
+            <i class="fas fa-envelope fa-2x text-primary"></i>
+            <h4 style="margin: 0.5rem 0">Email</h4>
+            <p>info@krishimitra.in<br />support@krishimitra.in</p>
+          </div>
+          <div style="margin: 1.5rem 0">
+            <i class="fas fa-map-marker-alt fa-2x text-primary"></i>
+            <h4 style="margin: 0.5rem 0">Address</h4>
+            <p>Krishimitra Foundation<br />New Delhi, India - 110001</p>
+          </div>
+          <!-- <div style="margin: 1.5rem 0;">
                         <i class="fas fa-map-marker-alt fa-2x text-primary"></i>
                         <h4 style="margin: 0.5rem 0;">Address</h4>
                         <p>Krishimitra Foundation<br>New Delhi, India - 110001</p>
-                    </div>
-                </div>
-
-                <div class="card mt-2">
-                    <h3>FAQ</h3>
-                    <h4 style="color: var(--primary-color); margin-top: 1rem;">How do I register?</h4>
-                    <p>Click on the "Register" button in the navigation menu and fill out the form.</p>
-                    
-                    <h4 style="color: var(--primary-color); margin-top: 1rem;">Is the service free?</h4>
-                    <p>Yes, Krishimitra is completely free for all farmers.</p>
-                    
-                    <h4 style="color: var(--primary-color); margin-top: 1rem;">How is data collected?</h4>
-                    <p>We collect data from government sources, private markets, and farmer contributions.</p>
-                </div>
-            </div>
+                    </div> -->
         </div>
+
+        <div class="card mt-2">
+          <h3>FAQ</h3>
+          <h4 style="color: var(--primary-color); margin-top: 1rem">
+            How do I register?
+          </h4>
+          <p>
+            Click on the "Register" button in the navigation menu and fill out
+            the form.
+          </p>
+
+          <h4 style="color: var(--primary-color); margin-top: 1rem">
+            Is the service free?
+          </h4>
+          <p>Yes, Krishimitra is completely free for all farmers.</p>
+
+          <h4 style="color: var(--primary-color); margin-top: 1rem">
+            How is data collected?
+          </h4>
+          <p>
+            We collect data from government sources, private markets, and farmer
+            contributions.
+          </p>
+
+          <!-- <h4 style="color: var(--primary-color); margin-top: 1rem;">How is data collected?</h4>
+                    <p>We collect data from government sources, private markets, and farmer contributions.</p> -->
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 {% endblock %}

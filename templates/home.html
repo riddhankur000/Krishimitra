@@ -1,162 +1,202 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <!-- Hero Section -->
 <section class="hero">
-    <div class="container">
-        <h1><i class="fas fa-seedling"></i> Welcome to Krishimitra</h1>
-        <p>Empowering farmers with fair market intelligence and transparent pricing</p>
-        <a href="/prices" class="btn btn-lg">Check Market Prices</a>
-    </div>
+  <div class="container">
+    <h1><i class="fas fa-seedling"></i> Welcome to Krishimitra</h1>
+    <p>
+      Empowering farmers with fair market intelligence and transparent pricing
+    </p>
+    <a href="/prices" class="btn btn-lg">Check Market Prices</a>
+  </div>
 </section>
 
 <section>
-    <div class="container">
-        <div class="section-title">
-            <h2>How We Help Farmers</h2>
-            <p>Transparent, Real-time, Actionable Market Information</p>
-        </div>
-        
-        <div class="grid grid-3">
-            <div class="card">
-                <i class="fas fa-chart-line fa-3x text-primary mb-1"></i>
-                <h3>Real-Time Market Prices</h3>
-                <p>Access up-to-date mandi prices across different states and regions. Know exactly what your crops are worth before you sell.</p>
-                <a href="/prices" class="btn btn-primary mt-1">View Prices</a>
-            </div>
-            
-            <div class="card">
-                <i class="fas fa-calculator fa-3x text-primary mb-1"></i>
-                <h3>Transport Calculator</h3>
-                <p>Calculate your net profit after considering transport costs to different mandis. Make informed decisions about where to sell.</p>
-                <a href="{{ url_for('transport_calculator') }}" class="btn btn-primary mt-1">Calculate Now</a>
-            </div>
-            
-            <div class="card">
-                <i class="fas fa-users fa-3x text-primary mb-1"></i>
-                <h3>Community Forum</h3>
-                <p>Connect with fellow farmers, share experiences, and learn best practices. Join discussions and get answers to your questions.</p>
-                <a href="{{ url_for('community') }}" class="btn btn-primary mt-1">Join Community</a>
-            </div>
-        </div>
+  <div class="container">
+    <div class="section-title">
+      <h2>How We Help Farmers</h2>
+      <p>Transparent, Real-time, Actionable Market Information</p>
     </div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <i class="fas fa-chart-line fa-3x text-primary mb-1"></i>
+        <h3>Real-Time Market Prices</h3>
+        <p>
+          Access up-to-date mandi prices across different states and regions.
+          Know exactly what your crops are worth before you sell.
+        </p>
+        <a href="/prices" class="btn btn-primary mt-1">View Prices</a>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-calculator fa-3x text-primary mb-1"></i>
+        <h3>Transport Calculator</h3>
+        <p>
+          Calculate your net profit after considering transport costs to
+          different mandis. Make informed decisions about where to sell.
+        </p>
+        <a
+          href="{{ url_for('transport_calculator') }}"
+          class="btn btn-primary mt-1"
+          >Calculate Now</a
+        >
+      </div>
+
+      <div class="card">
+        <i class="fas fa-users fa-3x text-primary mb-1"></i>
+        <h3>Community Forum</h3>
+        <p>
+          Connect with fellow farmers, share experiences, and learn best
+          practices. Join discussions and get answers to your questions.
+        </p>
+        <a href="{{ url_for('community') }}" class="btn btn-primary mt-1"
+          >Join Community</a
+        >
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- Statistics Section -->
 <section>
-    <div class="container">
-        <div class="grid grid-4">
-            <div class="card text-center">
-                <i class="fas fa-users fa-3x text-primary mb-1"></i>
-                <h2 id="farmers-count" data-target="{{ stats.farmers }}">0</h2>
-                <p>Registered Farmers</p>
-            </div>
-            
-            <div class="card text-center">
+  <div class="container">
+    <div class="grid grid-4">
+      <div class="card text-center">
+        <i class="fas fa-users fa-3x text-primary mb-1"></i>
+        <h2 id="farmers-count" data-target="{{ stats.farmers }}">0</h2>
+        <p>Registered Farmers</p>
+      </div>
+
+      <div class="card text-center">
+        <i class="fas fa-store fa-3x text-primary mb-1"></i>
+        <h2 id="mandis-count" data-target="{{ stats.mandis }}">0</h2>
+        <p>Mandis Tracked</p>
+      </div>
+
+      <!-- <div class="card text-center">
                 <i class="fas fa-store fa-3x text-primary mb-1"></i>
                 <h2 id="mandis-count" data-target="{{ stats.mandis }}">0</h2>
                 <p>Mandis Tracked</p>
-            </div>
-            
-            <div class="card text-center">
-                <i class="fas fa-leaf fa-3x text-primary mb-1"></i>
-                <h2 id="crops-count" data-target="{{ stats.crops }}">0</h2>
-                <p>Crops Covered</p>
-            </div>
-            
-            <div class="card text-center">
-                <i class="fas fa-map-marked-alt fa-3x text-primary mb-1"></i>
-                <h2 id="states-count" data-target="{{ stats.states }}">0</h2>
-                <p>States</p>
-            </div>
-        </div>
+            </div> -->
+
+      <div class="card text-center">
+        <i class="fas fa-leaf fa-3x text-primary mb-1"></i>
+        <h2 id="crops-count" data-target="{{ stats.crops }}">0</h2>
+        <p>Crops Covered</p>
+      </div>
+
+      <div class="card text-center">
+        <i class="fas fa-map-marked-alt fa-3x text-primary mb-1"></i>
+        <h2 id="states-count" data-target="{{ stats.states }}">0</h2>
+        <p>States</p>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- CTA Section -->
-<section style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
-    <div class="container text-center">
-        <h2>Join Krishimitra Community Today</h2>
-        <p style="font-size: 1.2rem; margin: 1rem 0 2rem;">Get access to real-time market data, connect with fellow farmers, and make informed decisions</p>
-        {% if not current_user.is_authenticated %}
-        <a href="/register" class="btn" style="background-color: white; color: var(--primary-color); font-weight: bold;">Register Now</a>
-        {% else %}
-        <a href="/dashboard" class="btn" style="background-color: white; color: var(--primary-color); font-weight: bold;">Go to Dashboard</a>
-        {% endif %}
-    </div>
+<section
+  style="
+    background: linear-gradient(
+      135deg,
+      var(--primary-color) 0%,
+      var(--secondary-color) 100%
+    );
+    color: white;
+  "
+>
+  <div class="container text-center">
+    <h2>Join Krishimitra Community Today</h2>
+    <p style="font-size: 1.2rem; margin: 1rem 0 2rem">
+      Get access to real-time market data, connect with fellow farmers, and make
+      informed decisions
+    </p>
+    {% if not current_user.is_authenticated %}
+    <a
+      href="/register"
+      class="btn"
+      style="
+        background-color: white;
+        color: var(--primary-color);
+        font-weight: bold;
+      "
+      >Register Now</a
+    >
+    {% else %}
+    <a
+      href="/dashboard"
+      class="btn"
+      style="
+        background-color: white;
+        color: var(--primary-color);
+        font-weight: bold;
+      "
+      >Go to Dashboard</a
+    >
+    {% endif %}
+  </div>
 </section>
 
-
-
 <script>
-    // Animated counter for statistics
-    function animateCounter(elementId) {
-        const element = document.getElementById(elementId);
-        const target = parseInt(element.getAttribute('data-target'));
-        const duration = 2000;
-        const increment = target / (duration / 16);
-        let current = 0;
-        
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                element.textContent = target.toLocaleString() + '+';
-                clearInterval(timer);
-            } else {
-                element.textContent = Math.floor(current).toLocaleString();
-            }
-        }, 16);
-    }
-    
-    // For Prono to remove 
-    // Observe when stats section comes into view
-     // For Prono to remove
-      // For Prono to remove
-       // For Prono to remove
-        // For Prono to remove
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter('farmers-count');
-                animateCounter('mandis-count');
-                animateCounter('crops-count');
-                animateCounter('states-count');
-                statsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-    
-    // For Prono to remove
-     // For Prono to remove
-      // For Prono to remove
-       // For Prono to remove
-        // For Prono to remove
-    // Start observing when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-        const statsSection = document.querySelector('.grid.grid-4').parentElement;
-        if (statsSection) {
-            statsObserver.observe(statsSection);
+  // Animated counter for statistics
+  function animateCounter(elementId) {
+    const element = document.getElementById(elementId);
+    const target = parseInt(element.getAttribute("data-target"));
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    let current = 0;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        element.textContent = target.toLocaleString() + "+";
+        clearInterval(timer);
+      } else {
+        element.textContent = Math.floor(current).toLocaleString();
+      }
+    }, 16);
+  }
+
+  // Observe when stats section comes into view
+  const statsObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          animateCounter("farmers-count");
+          animateCounter("mandis-count");
+          animateCounter("crops-count");
+          animateCounter("states-count");
+          statsObserver.unobserve(entry.target);
         }
-    });
+      });
+    },
+    { threshold: 0.5 }
+  );
+
+  // Start observing when DOM is loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    const statsSection = document.querySelector(".grid.grid-4").parentElement;
+    if (statsSection) {
+      statsObserver.observe(statsSection);
+    }
+  });
 </script>
 
 <style>
-    /* For Prono to remove */
-    /* For Prono to remove */
-    .card h2 {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-    
-    .card:hover h2 {
-        color: var(--secondary-color);
-    }
+  .card h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .card:hover h2 {
+    color: var(--secondary-color);
+  }
 </style>
 {% endblock %}

@@ -1,211 +1,285 @@
-{% extends "base.html" %}
-{% block title %}Community Forum - Krishimitra{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Community Forum - Krishimitra{%
+endblock %} {% block content %}
 <div class="page-header">
-    <div class="container">
-        <h1><i class="fas fa-users"></i> Farmer Community</h1>
-        <p>Share experiences and learn from fellow farmers</p>
-    </div>
+  <div class="container">
+    <h1><i class="fas fa-users"></i> Farmer Community</h1>
+    <p>Share experiences and learn from fellow farmers</p>
+  </div>
 </div>
 
 <section>
-    <div class="container">
-        <div class="grid grid-2">
-            <div>
-                <div class="card">
-                    <h3>Recent Discussions</h3>
-                    
-                    {% if posts %}
-                        {% for post in posts %}
-                        <div style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <h4 style="margin-bottom: 0.5rem; flex: 1;">
-                                    <a href="#" style="color: var(--primary-color); text-decoration: none;">{{ post.title }}</a>
-                                </h4>
-                                {% if post.category %}
-                                <span style="background-color: var(--light-bg); padding: 0.2rem 0.6rem; border-radius: 3px; font-size: 0.8rem; color: var(--text-light);">
-                                    {{ post.category }}
-                                </span>
-                                {% endif %}
-                            </div>
-                            
-                            <p style="color: var(--text-dark); margin: 0.8rem 0; line-height: 1.6;">{{ post.excerpt }}</p>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                                <small style="color: var(--text-light);">
-                                    <i class="fas fa-user"></i> {{ post.author }}
-                                    <span style="margin-left: 1rem;">
-                                        <i class="fas fa-clock"></i> {{ post.created_at }}
-                                    </span>
-                                </small>
-                                
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div style="text-align: center; padding: 2rem; color: var(--text-light);">
-                            <i class="fas fa-comments fa-3x" style="margin-bottom: 1rem;"></i>
-                            <p>No discussions yet. Be the first to start a conversation!</p>
-                        </div>
-                    {% endif %}
-                </div>
+  <div class="container">
+    <div class="grid grid-2">
+      <div>
+        <div class="card">
+          <h3>Recent Discussions</h3>
+
+          {% if posts %} {% for post in posts %}
+          <div
+            style="
+              border-bottom: 1px solid var(--border-color);
+              padding: 1rem 0;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+              "
+            >
+              <h4 style="margin-bottom: 0.5rem; flex: 1">
+                <a
+                  href="#"
+                  style="color: var(--primary-color); text-decoration: none"
+                  >{{ post.title }}</a
+                >
+              </h4>
+              {% if post.category %}
+              <span
+                style="
+                  background-color: var(--light-bg);
+                  padding: 0.2rem 0.6rem;
+                  border-radius: 3px;
+                  font-size: 0.8rem;
+                  color: var(--text-light);
+                "
+              >
+                {{ post.category }}
+              </span>
+              {% endif %}
             </div>
 
-            <div>
-                {% if current_user.is_authenticated %}
-                <div class="card">
-                    <h3><i class="fas fa-plus"></i> Start a Discussion</h3>
-                    <form method="POST" action="{{ url_for('community') }}">
-                        <div class="form-group">
-                            <label for="title">Title *</label>
-                            <input type="text" id="title" name="title" class="form-control" 
-                                   placeholder="What's your topic?" required maxlength="200">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="category">Category</label>
-                            <select id="category" name="category" class="form-control">
-                                <option value="Market Prices">Market Prices</option>
-                                <option value="Transport">Transport</option>
-                                <option value="Government Schemes">Government Schemes</option>
-                                <option value="Pest Control">Pest Control</option>
-                                <option value="Farming Tips">Farming Tips</option>
-                                <option value="Weather">Weather</option>
-                                <option value="General">General</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="content">Content *</label>
-                            <textarea id="content" name="content" class="form-control" rows="5" 
-                                      placeholder="Share your thoughts, experiences, or questions..." required></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">
-                            <i class="fas fa-paper-plane"></i> Post Discussion
-                        </button>
-                    </form>
-                </div>
-                {% else %}
-                <div class="card" style="text-align: center; padding: 2rem;">
-                    <i class="fas fa-lock fa-3x text-primary mb-1"></i>
-                    <h3>Login Required</h3>
-                    <p style="color: var(--text-light); margin: 1rem 0;">
-                        Please login to post discussions and interact with the community.
-                    </p>
-                    <a href="{{ url_for('login') }}" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                </div>
-                {% endif %}
+            <p
+              style="
+                color: var(--text-dark);
+                margin: 0.8rem 0;
+                line-height: 1.6;
+              "
+            >
+              {{ post.excerpt }}
+            </p>
 
-                <div class="card mt-2">
-                    <h4><i class="fas fa-info-circle"></i> Community Guidelines</h4>
-                    <ul style="line-height: 1.8; color: var(--text-light); padding-left: 1.5rem;">
-                        <li>Be respectful and helpful to fellow farmers</li>
-                        <li>Share accurate information and experiences</li>
-                        <li>No spam or promotional content</li>
-                        <li>Protect privacy - don't share personal details</li>
-                        <li>Ask questions and learn from others</li>
-                    </ul>
-                </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 0.5rem;
+              "
+            >
+              <small style="color: var(--text-light)">
+                <i class="fas fa-user"></i> {{ post.author }}
+                <span style="margin-left: 1rem">
+                  <i class="fas fa-clock"></i> {{ post.created_at }}
+                </span>
+              </small>
             </div>
+          </div>
+          {% endfor %} {% else %}
+          <div
+            style="text-align: center; padding: 2rem; color: var(--text-light)"
+          >
+            <i class="fas fa-comments fa-3x" style="margin-bottom: 1rem"></i>
+            <p>No discussions yet. Be the first to start a conversation!</p>
+          </div>
+          {% endif %}
         </div>
+      </div>
+
+      <!-- <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p> -->
+
+      <div>
+        {% if current_user.is_authenticated %}
+        <div class="card">
+          <h3><i class="fas fa-plus"></i> Start a Discussion</h3>
+          <form method="POST" action="{{ url_for('community') }}">
+            <div class="form-group">
+              <label for="title">Title *</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-control"
+                placeholder="What's your topic?"
+                required
+                maxlength="200"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="category">Category</label>
+              <select id="category" name="category" class="form-control">
+                <option value="Market Prices">Market Prices</option>
+                <option value="Transport">Transport</option>
+                <option value="Government Schemes">Government Schemes</option>
+                <option value="Pest Control">Pest Control</option>
+                <option value="Farming Tips">Farming Tips</option>
+                <option value="Weather">Weather</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="content">Content *</label>
+              <textarea
+                id="content"
+                name="content"
+                class="form-control"
+                rows="5"
+                placeholder="Share your thoughts, experiences, or questions..."
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%">
+              <i class="fas fa-paper-plane"></i> Post Discussion
+            </button>
+          </form>
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 2rem">
+          <i class="fas fa-lock fa-3x text-primary mb-1"></i>
+          <h3>Login Required</h3>
+          <p style="color: var(--text-light); margin: 1rem 0">
+            Please login to post discussions and interact with the community.
+          </p>
+          <a href="{{ url_for('login') }}" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p>
+            <p>for arnob to remove</p> -->
+
+        <div class="card mt-2">
+          <h4><i class="fas fa-info-circle"></i> Community Guidelines</h4>
+          <ul
+            style="
+              line-height: 1.8;
+              color: var(--text-light);
+              padding-left: 1.5rem;
+            "
+          >
+            <li>Be respectful and helpful to fellow farmers</li>
+            <li>Share accurate information and experiences</li>
+            <li>No spam or promotional content</li>
+            <li>Protect privacy - don't share personal details</li>
+            <li>Ask questions and learn from others</li>
+          </ul>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <script>
-// Handle like/unlike functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const likeButtons = document.querySelectorAll('.like-btn');
-    
-    likeButtons.forEach(button => {
-        // Track liked state in localStorage
-        const postId = button.dataset.postId;
-        const isLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
-        
-        if (isLiked) {
-            button.querySelector('i').classList.add('fas');
-            button.querySelector('i').style.color = '#e74c3c';
-        }
-        
-        button.addEventListener('click', function() {
-            const postId = this.dataset.postId;
-            const icon = this.querySelector('i');
-            const countSpan = this.querySelector('.like-count');
-            const isCurrentlyLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
-            
-            // Determine action
-            const action = isCurrentlyLiked ? 'unlike' : 'like';
-            
-            // Send request to server
-            fetch(`/community/like/${postId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action: action })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update UI
-                    countSpan.textContent = data.likes;
-                    
-                    if (action === 'like') {
-                        icon.style.color = '#e74c3c';
-                        localStorage.setItem(`liked_post_${postId}`, 'true');
-                    } else {
-                        icon.style.color = 'var(--primary-color)';
-                        localStorage.removeItem(`liked_post_${postId}`);
-                    }
-                } else {
-                    alert(data.message || 'Error updating likes');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating likes. Please try again.');
-            });
-        });
+  // Handle like/unlike functionality
+  document.addEventListener("DOMContentLoaded", function () {
+    const likeButtons = document.querySelectorAll(".like-btn");
+
+    likeButtons.forEach((button) => {
+      // Track liked state in localStorage
+      const postId = button.dataset.postId;
+      const isLiked = localStorage.getItem(`liked_post_${postId}`) === "true";
+
+      if (isLiked) {
+        button.querySelector("i").classList.add("fas");
+        button.querySelector("i").style.color = "#e74c3c";
+      }
+
+      // for arnob to remove
+      // for arnob to remove
+      // for arnob to remove
+      // for arnob to remove
+      // for arnob to remove
+
+      button.addEventListener("click", function () {
+        const postId = this.dataset.postId;
+        const icon = this.querySelector("i");
+        const countSpan = this.querySelector(".like-count");
+        const isCurrentlyLiked =
+          localStorage.getItem(`liked_post_${postId}`) === "true";
+
+        // Determine action
+        const action = isCurrentlyLiked ? "unlike" : "like";
+
+        // Send request to server
+        fetch(`/community/like/${postId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: action }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Update UI
+              countSpan.textContent = data.likes;
+
+              if (action === "like") {
+                icon.style.color = "#e74c3c";
+                localStorage.setItem(`liked_post_${postId}`, "true");
+              } else {
+                icon.style.color = "var(--primary-color)";
+                localStorage.removeItem(`liked_post_${postId}`);
+              }
+            } else {
+              alert(data.message || "Error updating likes");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error updating likes. Please try again.");
+          });
+      });
     });
-});
+  });
 </script>
 
 <style>
-.like-btn:hover {
+  .like-btn:hover {
     opacity: 0.8;
     transform: scale(1.1);
     transition: all 0.2s ease;
-}
+  }
 
-.form-group {
+  .form-group {
     margin-bottom: 1.5rem;
-}
+  }
 
-.form-group label {
+  .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
     color: var(--text-dark);
-}
+  }
 
-.form-control {
+  .form-control {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1rem;
-}
+  }
 
-.form-control:focus {
+  .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-}
+  }
 
-textarea.form-control {
+  textarea.form-control {
     resize: vertical;
     font-family: inherit;
-}
+  }
 </style>
 {% endblock %}
