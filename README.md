@@ -22,6 +22,8 @@ A comprehensive Flask-based web application designed to empower Indian farmers w
 
 **Krishimitra** ("Farmer's Friend") addresses the critical information asymmetry in Indian agricultural markets. Farmers often lack real-time price data across different mandis, leading to exploitation by middlemen and suboptimal selling decisions.
 
+![Home page screenshot](./images/home_page.png)
+
 ### Problem Statement
 
 - **Lack of Price Transparency**: Farmers don't know the best markets to sell their produce
@@ -123,7 +125,7 @@ krishimitra/
 ├── README.md # Project documentation
 │
 ├── data/ # Data files
-│   ├z── agmarknet_india_historical_prices_2024_2025.csv
+│   ├── agmarknet_india_historical_prices_2024_2025.csv
 │   ├── commodity_mapping.json # Commodity name standardization
 │   └── commodity_crop.json # Commodity name standardization
 │
