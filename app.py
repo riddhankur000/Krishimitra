@@ -21,27 +21,18 @@ import glob
 import random
 import json
 import numpy as np
-# --- Setup Chrome Driver ---
 
 import matplotlib
-matplotlib.use('Agg') # Prevents GUI errors
+matplotlib.use('Agg')
 
 chrome_options = Options()
-# chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--disable-blink-features=AutomationControlled") 
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
-# chrome_options.add_argument('--headless')  # Run in background
 
-# REMOVE: Service(ChromeDriverManager().install())
-# REPLACE WITH: Service() 
-# Selenium will handle the driver download automatically.
+
 service = Service() 
-
-# chrome_options = Options()
-# chrome_options.add_argument('--start-maximized')
-# chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-# chrome_options.add_argument('--headless')  # Run in background
 
 # Mock data for demonstration
 MOCK_CROPS = json.load(open(os.path.join('data', 'commodity_crop.json')))['commodities']
@@ -55,7 +46,6 @@ MOCK_PRICES = [
     {'state': 'Maharashtra', 'APMC': 'Mumbai APMC', 'Commodity': 'Cotton', 'Min_Price': 7000, 'Modal_Price': 7500, 'Max_Price': 8000},
 ]
 
-# COMMODITY_MAP=json.load(open(r'data\commodity_mapping.json'))
 import os
 # ...
 COMMODITY_MAP = json.load(open(os.path.join('data', 'commodity_mapping.json')))
@@ -72,7 +62,7 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         state_name = state_name.strip().upper()
         commodity_name = commodity_name.strip()
 
-        # 1. Filter for Commodity (All India)
+        # Filter for Commodity (country-wide)
         national_df = df[df['Commodity'] == commodity_name].copy()
         
         if national_df.empty:
@@ -80,12 +70,10 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
 
         national_avg = round(national_df['Modal_Price'].mean(), 2)
         
-        # 2. Filter for State
+        # Filter for State
         state_df = national_df[national_df['state'].str.upper() == state_name].copy()
         
-        # --- STATE DATA PREPARATION ---
         if state_df.empty or len(state_df) == 0:
-            # No state data available
             state_avg = 0
             st_asc_labels, st_asc_data = [], []
             st_desc_labels, st_desc_data = [], []
@@ -94,24 +82,18 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
             state_avg = round(state_df['Modal_Price'].mean(), 2)
             has_state_data = True
             
-            # State Cheapest (Ascending) - Take up to 5
             st_asc = state_df.sort_values(by='Modal_Price', ascending=True).head(5)
             st_asc_labels = st_asc['APMC'].tolist()
             st_asc_data = st_asc['Modal_Price'].tolist()
 
-            # State Costliest (Descending) - Take up to 5
             st_desc = state_df.sort_values(by='Modal_Price', ascending=False).head(5)
             st_desc_labels = st_desc['APMC'].tolist()
             st_desc_data = st_desc['Modal_Price'].tolist()
-
-        # --- NATIONAL DATA PREPARATION ---
         
-        # National Cheapest (Ascending)
         nat_asc = national_df.sort_values(by='Modal_Price', ascending=True).head(10)
         nat_asc_labels = nat_asc.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
         nat_asc_data = nat_asc['Modal_Price'].tolist()
 
-        # National Costliest (Descending)
         nat_desc = national_df.sort_values(by='Modal_Price', ascending=False).head(10)
         nat_desc_labels = nat_desc.apply(lambda x: f"{x['APMC']}, {x['state']}", axis=1).tolist()
         nat_desc_data = nat_desc['Modal_Price'].tolist()
@@ -120,8 +102,7 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
             "state_name": state_name.title(),
             "national_avg": national_avg,
             "state_avg": state_avg,
-            "has_state_data": has_state_data,  # NEW: Flag to check if state data exists
-            # Return 4 distinct datasets
+            "has_state_data": has_state_data,
             "state_asc": {"labels": st_asc_labels, "data": st_asc_data},
             "state_desc": {"labels": st_desc_labels, "data": st_desc_data},
             "national_asc": {"labels": nat_asc_labels, "data": nat_asc_data},
@@ -132,7 +113,6 @@ def get_bar_chart_data(master_df, state_name, commodity_name):
         print(f"Bar Chart Data Error: {e}")
         return None
 
-# --- Helper Function to Generate Historical Graph ---
 def get_historical_data(state_name, commodity_name):
     try:
         csv_path = os.path.join('data', 'agmarknet_india_historical_prices_2024_2025.csv')
@@ -141,51 +121,47 @@ def get_historical_data(state_name, commodity_name):
 
         df = pd.read_csv(csv_path)
 
-        # Standardize text
         state_name = state_name.strip().lower()
         commodity_name = COMMODITY_MAP[commodity_name.strip().upper()].lower()
         
-        # Clean Data
         df['State'] = df['State'].str.strip()
         df['Commodity'] = df['Commodity'].str.strip()
         df['Price Date'] = pd.to_datetime(df['Price Date'], format='%d %b %Y', errors='coerce')
         df = df.sort_values('Price Date')
         
-        # Create Month Column (YYYY-MM) for grouping
         df['Month'] = df['Price Date'].dt.to_period('M').astype(str)
 
-        # 1. Filter for Specific Crop (All India)
+        # Filter for Specific Crop
         crop_df = df[df['Commodity'].str.lower() == commodity_name].copy()
         
         if crop_df.empty:
             return None, "Historical Price for this crop is not available"
 
-        # 2. Calculate National Average (All India Trend)
+        # Calculate National Average
         national_avg = crop_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
 
-        # 3. Filter for Specific State
+        # Filter for Specific State
         state_df = crop_df[crop_df['State'].str.lower() == state_name].copy()
         
         if state_df.empty:
             return None, f"No data found for {commodity_name} in {state_name}"
 
-        # 4. Calculate State Average
+        # Calculate State Average
         state_avg = state_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
 
-        # 5. Prepare Market-wise Data
+        # Prepare Market-wise Data
         market_data = {}
         unique_markets = state_df['Market Name'].unique()
         
         for market in unique_markets:
             m_df = state_df[state_df['Market Name'] == market]
             m_avg = m_df.groupby('Month')['Modal Price (Rs./Quintal)'].mean().round(2)
-            # Convert to dict mapping Month -> Price
             market_data[market] = m_avg.to_dict()
 
-        # 6. Consolidate all unique months (Labels)
+        # Consolidate all unique months (Labels)
         all_months = sorted(list(set(national_avg.index) | set(state_avg.index)))
 
-        # 7. Align Data to Labels (Fill missing months with None)
+        # Align Data to Labels (Fill missing months with None)
         def align_data(source_series, labels):
             return [source_series.get(month, None) for month in labels]
 
@@ -308,7 +284,6 @@ current_user={'name':None,"id":None,"is_authenticated":False,'details':None}
 @login_manager.user_loader
 def load_user(user_id):
     return  db.session.get(User, user_id)
-    # return User.query.get(int(user_id))
 
 # Login required decorator
 def login_required(f):
@@ -330,7 +305,7 @@ HOME_STATS_CACHE = {
     'lock': threading.Lock()
 }
 
-CACHE_DURATION = timedelta(hours=1)  # Cache for 1 hour
+CACHE_DURATION = timedelta(hours=1)
 
 def get_home_statistics():
     """
@@ -348,10 +323,10 @@ def get_home_statistics():
         
         # Cache expired or doesn't exist, fetch new data
         try:
-            # 1. Count registered farmers
+            # Count registered farmers
             total_farmers = User.query.filter_by(user_type='farmer').count()
             
-            # 2. Get unique mandis, crops, and states count from live data
+            # Get unique mandis, crops, and states count from live data
             master_df = extract_commodity_list()
             
             if not master_df.empty:
@@ -364,7 +339,6 @@ def get_home_statistics():
                 unique_crops = 50
                 unique_states = 20
             
-            # Prepare statistics
             stats = {
                 'farmers': total_farmers if total_farmers > 0 else 10000,
                 'mandis': unique_mandis,
@@ -397,7 +371,6 @@ def home():
     stats = get_home_statistics()
     return render_template('home.html', current_user=current_user, stats=stats)
 
-# Optional: Add an API endpoint to refresh cache manually (admin only)
 @app.route('/api/refresh-home-stats')
 @login_required
 def refresh_home_stats():
@@ -424,7 +397,7 @@ def about():
 @app.route('/prices', methods=['GET', 'POST'])
 def prices():
     show_graph=False
-    # 1. Get Master Data
+    # Get Master Data
     master_df = extract_commodity_list()
     
     if not master_df.empty:
@@ -444,7 +417,7 @@ def prices():
     
     # Variables for Charts
     historical_chart_data = None
-    bar_chart_data = None  # <--- NEW
+    bar_chart_data = None 
     historical_msg = None
     is_commodity = False
 
@@ -458,14 +431,12 @@ def prices():
             
             prices_data = extract_commodity_data(commodity_filter)
 
-            # prices_data = extract_commodity_data(commodity_filter)
         else:
             prices_data = master_df.to_dict(orient='records')
 
         if state_filter:
             prices_data = [row for row in prices_data if row['state'].upper() == state_filter.upper()]
 
-        # --- CHART LOGIC ---
         if commodity_filter and state_filter:
             show_graph=True
 
@@ -495,7 +466,7 @@ def prices():
         
         # Pass Chart Data
         chart_data=historical_chart_data,
-        bar_chart_data=bar_chart_data, # <--- NEW
+        bar_chart_data=bar_chart_data,
         historical_msg=historical_msg
     )
 
@@ -503,10 +474,10 @@ def prices():
 def transport_calculator():
     show_calc = False
     
-    # --- 1. Data Extraction ---
+    # --- Data Extraction ---
     master_df = extract_commodity_list() 
     
-    # --- 2. Data Cleaning & Setup ---
+    # --- Data Cleaning & Setup ---
     crop_to_mandi = {}
     price_lookup = {}
     all_crops = []
@@ -546,7 +517,7 @@ def transport_calculator():
         try:
             # Get Form Data
             selected_crop = request.form.get('crop')
-            selected_mandi_full = request.form.get('to_mandi')  # Format: "APMC, State"
+            selected_mandi_full = request.form.get('to_mandi')
             from_location = request.form.get('from_location')
             
             quantity = float(request.form.get('quantity') or 0)
@@ -579,7 +550,6 @@ def transport_calculator():
             }
 
             if not master_df.empty and selected_crop:
-                # Filter by Crop
                 crop_df = master_df[master_df['Commodity'] == selected_crop].copy()
                 
                 if not crop_df.empty:
@@ -590,7 +560,7 @@ def transport_calculator():
                             'APMC': row['mandi_display'],
                             'Price': row['Modal_Price'],
                             'Gross_Rev': quantity * row['Modal_Price'],
-                            'rate_per_km': rate_per_km  # Pass rate to frontend
+                            'rate_per_km': rate_per_km
                         })
 
                     df_state = crop_df[crop_df['state'] == selected_state_name].sort_values(by='Modal_Price', ascending=False).head(5)
@@ -600,7 +570,7 @@ def transport_calculator():
                             'APMC': row['mandi_display'],
                             'Price': row['Modal_Price'],
                             'Gross_Rev': quantity * row['Modal_Price'],
-                            'rate_per_km': rate_per_km  # Pass rate to frontend
+                            'rate_per_km': rate_per_km
                         })
 
                     if top_5_india:
@@ -671,17 +641,14 @@ def community():
             print(f"Error: {e}")
             return redirect(url_for('community'))
     
-    # GET request - fetch latest 10 posts
     posts = CommunityPost.query\
         .order_by(CommunityPost.created_at.desc())\
         .limit(10)\
         .all()
     
-    # Convert to list of dicts with author info
     posts_data = []
     for post in posts:
         author = db.session.get(User, post.user_id)
-        # author = User.query.get(post.user_id)
         posts_data.append({
             'id': post.id,
             'title': post.title,
@@ -707,7 +674,7 @@ def like_post(post_id):
     try:
         post = CommunityPost.query.get_or_404(post_id)
         
-        action = request.json.get('action')  # 'like' or 'unlike'
+        action = request.json.get('action')
         
         if action == 'like':
             post.likes += 1
@@ -867,8 +834,6 @@ with app.app_context():
 import os
 
 if __name__ == '__main__':
-    # Get the port from Render's environment variable, default to 5000 for local testing
     port = int(os.environ.get("PORT", 5000))
     
-    # host='0.0.0.0' is required for the app to be visible on Render
-    app.run(host='0.0.0.0', port=port, debug=False) # Turn off debug in production!
+    app.run(host='0.0.0.0', port=port, debug=False)

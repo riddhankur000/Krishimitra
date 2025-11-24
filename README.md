@@ -129,6 +129,9 @@ krishimitra/
 │   ├── commodity_mapping.json # Commodity name standardization
 │   └── commodity_crop.json # Commodity name standardization
 │
+├── images/ #Snapshots of UI and generated plots(if any)
+│   └── home_page.png
+│
 ├── instance/ # SQLite database directory
 │   └── krishimitra.db # User and transaction data
 │

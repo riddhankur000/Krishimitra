@@ -93,8 +93,8 @@
     function animateCounter(elementId) {
         const element = document.getElementById(elementId);
         const target = parseInt(element.getAttribute('data-target'));
-        const duration = 2000; // 2 seconds
-        const increment = target / (duration / 16); // 60 FPS
+        const duration = 2000;
+        const increment = target / (duration / 16);
         let current = 0;
         
         const timer = setInterval(() => {
@@ -108,7 +108,12 @@
         }, 16);
     }
     
-    // Intersection Observer to trigger animation when stats section is visible
+    // For Prono to remove 
+    // Observe when stats section comes into view
+     // For Prono to remove
+      // For Prono to remove
+       // For Prono to remove
+        // For Prono to remove
     const statsObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -121,6 +126,11 @@
         });
     }, { threshold: 0.5 });
     
+    // For Prono to remove
+     // For Prono to remove
+      // For Prono to remove
+       // For Prono to remove
+        // For Prono to remove
     // Start observing when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
         const statsSection = document.querySelector('.grid.grid-4').parentElement;
@@ -131,7 +141,8 @@
 </script>
 
 <style>
-    /* Add smooth animation for counters */
+    /* For Prono to remove */
+    /* For Prono to remove */
     .card h2 {
         font-size: 2.5rem;
         font-weight: bold;
