@@ -115,12 +115,10 @@
 </section>
 
 <script>
-// Handle like/unlike functionality
 document.addEventListener('DOMContentLoaded', function() {
     const likeButtons = document.querySelectorAll('.like-btn');
     
     likeButtons.forEach(button => {
-        // Track liked state in localStorage
         const postId = button.dataset.postId;
         const isLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
         
@@ -135,10 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const countSpan = this.querySelector('.like-count');
             const isCurrentlyLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
             
-            // Determine action
             const action = isCurrentlyLiked ? 'unlike' : 'like';
             
-            // Send request to server
             fetch(`/community/like/${postId}`, {
                 method: 'POST',
                 headers: {
@@ -149,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update UI
                     countSpan.textContent = data.likes;
                     
                     if (action === 'like') {

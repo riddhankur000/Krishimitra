@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero Section -->
 <section class="hero">
     <div class="container">
         <h1><i class="fas fa-seedling"></i> Welcome to Krishimitra</h1>
@@ -42,7 +41,6 @@
     </div>
 </section>
 
-<!-- Statistics Section -->
 <section>
     <div class="container">
         <div class="grid grid-4">
@@ -73,7 +71,6 @@
     </div>
 </section>
 
-<!-- CTA Section -->
 <section style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
     <div class="container text-center">
         <h2>Join Krishimitra Community Today</h2>
@@ -89,12 +86,11 @@
 
 
 <script>
-    // Animated counter for statistics
     function animateCounter(elementId) {
         const element = document.getElementById(elementId);
         const target = parseInt(element.getAttribute('data-target'));
-        const duration = 2000; // 2 seconds
-        const increment = target / (duration / 16); // 60 FPS
+        const duration = 2000; 
+        const increment = target / (duration / 16); 
         let current = 0;
         
         const timer = setInterval(() => {
@@ -108,7 +104,6 @@
         }, 16);
     }
     
-    // Intersection Observer to trigger animation when stats section is visible
     const statsObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -121,7 +116,6 @@
         });
     }, { threshold: 0.5 });
     
-    // Start observing when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
         const statsSection = document.querySelector('.grid.grid-4').parentElement;
         if (statsSection) {
@@ -131,7 +125,6 @@
 </script>
 
 <style>
-    /* Add smooth animation for counters */
     .card h2 {
         font-size: 2.5rem;
         font-weight: bold;

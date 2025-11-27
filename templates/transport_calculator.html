@@ -18,7 +18,6 @@
     {% if show_calc %}
         <div class="inner_container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
 
-            <!-- NET REVENUE CARD -->
             <div class="card mb-3" style="flex: 1; min-width: 300px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
                 <h3 style="color: white;"><i class="fas fa-rupee-sign"></i> Net Revenue</h3>
                 
@@ -52,20 +51,11 @@
                 </div>
             </div>
 
-            <!-- CHARTS CARD -->
             <div class="card" style="flex: 2; min-width: 400px;">
                 <h3><i class="fas fa-chart-bar"></i> Top Markets Analysis (Revenue)</h3>
                 
-                <!-- DEBUG INFO (Remove after testing) -->
                 {% if chart_data %}
-                <!-- <div style="background: #f0f0f0; padding: 10px; margin: 20px 0; font-family: monospace; font-size: 12px;">
-                    <strong>DEBUG INFO:</strong><br>
-                    chart_data exists: {{ chart_data is not none }}<br>
-                    india_labels: {{ chart_data.india_labels }}<br>
-                    india_data: {{ chart_data.india_data }}<br>
-                    state_labels: {{ chart_data.state_labels }}<br>
-                    state_data: {{ chart_data.state_data }}<br>
-                </div> -->
+
                 {% endif %}
                 
                 {% if chart_data and chart_data.india_data %}
@@ -100,11 +90,9 @@
 
 
 
-            <!-- OPPORTUNITIES TABLE -->
             <div class="card" style="width: 100%;">
                 <h3><i class="fas fa-list-ol"></i> Highest Price Opportunities - Detailed Analysis</h3>
                 <div class="grid grid-2">
-                    <!-- ALL INDIA TOP 5 -->
                     <div>
                         <h5 style="color: var(--primary-color);">All India Top 5</h5>
                         <div style="overflow-x: auto;">
@@ -147,7 +135,6 @@
                         </div>
                     </div>
 
-                    <!-- STATE TOP 5 -->
                     <div>
                         <h5 style="color: var(--primary-color);">{{ chart_data.state_name if chart_data else 'State' }} Top 5</h5>
                         {% if top_5_state %}
@@ -222,7 +209,6 @@
         </div>
 
     {% else %}
-        <!-- INPUT FORM -->
         <div class="grid grid-2">
             <div class="card">
                 <h3><i class="fas fa-edit"></i> Enter Details</h3>
@@ -307,12 +293,10 @@
 </section>
 
 <script>
-    // Common Data
     const cropToMandiMap = {{ crop_to_mandi | tojson | safe }};
     const priceLookup = {{ price_lookup | tojson | safe }};
     const preSelectedMandi = "{{ result.selected_mandi if result else '' }}";
 
-    // --- HELPER FUNCTIONS ---
     function filterMandis() {
         const cropSelect = document.getElementById("crop");
         if (!cropSelect) return;
@@ -383,14 +367,11 @@
         } catch (e) { msgSpan.innerHTML = "API Error"; }
     }
 
-    // Helper function to format numbers with Indian commas
     function formatNumber(num) {
         return parseFloat(num).toLocaleString('en-IN');
     }
 
-    // --- CHART RENDERING LOGIC ---
     {% if chart_data %}
-    // Store chart data in global variable
     const chartData = {
         india_labels: {{ chart_data.india_labels | tojson | safe }},
         india_data: {{ chart_data.india_data | tojson | safe }},
@@ -408,7 +389,6 @@
 
         const ctx = canvas.getContext('2d');
         
-        // Destroy existing chart if it exists
         if (window[canvasId + '_instance']) {
             window[canvasId + '_instance'].destroy();
         }
@@ -466,19 +446,16 @@
         console.log("Chart rendered:", canvasId);
     }
 
-    // Initialize charts when page loads
     if (typeof Chart !== 'undefined') {
         console.log("Chart.js loaded, initializing charts...");
         console.log("Chart data:", chartData);
         
-        // Render both charts
         renderChart('indiaChart', chartData.india_labels, chartData.india_data, 'rgba(46, 204, 113, 0.8)');
         renderChart('stateChart', chartData.state_labels, chartData.state_data, 'rgba(52, 152, 219, 0.8)');
     } else {
         console.error("Chart.js not loaded!");
     }
 
-    // --- DISTANCE & COST CALCULATION FOR TABLES ---
     {% if result and result.from_location %}
     async function calculateTableDistances() {
         const fromLocation = "{{ result.from_location }}";
@@ -488,7 +465,6 @@
         
         if (!fromCoords) {
             console.error("Could not get coordinates for from_location:", fromLocation);
-            // Show error in all distance cells
             document.querySelectorAll('.distance-cell').forEach(cell => {
                 cell.innerHTML = '<small style="color:#dc3545;">Location Error</small>';
             });
@@ -497,7 +473,6 @@
         
         console.log("From coordinates:", fromCoords);
 
-        // Calculate distances for India Top 5
         {% if top_5_india %}
         const indiaDestinations = {{ top_5_india | tojson | safe }};
         console.log("Calculating distances for India Top 5:", indiaDestinations.length, "destinations");
@@ -535,11 +510,9 @@
                     
                     console.log(`  Distance: ${distance}km, Cost: ₹${transportCost}, Net: ₹${netRevenue}`);
                     
-                    // Update cells
                     distSpan.innerHTML = `<strong>${distance} km</strong>`;
                     tcostSpan.innerHTML = `₹${formatNumber(transportCost)}`;
                     
-                    // Color code net revenue
                     const netColor = netRevenue > 0 ? '#2e7d32' : '#c62828';
                     netSpan.innerHTML = `<span style="color: ${netColor};">₹${formatNumber(netRevenue)}</span>`;
                 } else {
@@ -555,12 +528,10 @@
                 netSpan.innerHTML = '<small style="color:#999;">-</small>';
             }
             
-            // Delay to avoid rate limiting (increased to 500ms)
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         {% endif %}
 
-        // Calculate distances for State Top 5
         {% if top_5_state %}
         const stateDestinations = {{ top_5_state | tojson | safe }};
         console.log("Calculating distances for State Top 5:", stateDestinations.length, "destinations");
@@ -598,11 +569,9 @@
                     
                     console.log(`  Distance: ${distance}km, Cost: ₹${transportCost}, Net: ₹${netRevenue}`);
                     
-                    // Update cells
                     distSpan.innerHTML = `<strong>${distance} km</strong>`;
                     tcostSpan.innerHTML = `₹${formatNumber(transportCost)}`;
                     
-                    // Color code net revenue
                     const netColor = netRevenue > 0 ? '#2e7d32' : '#c62828';
                     netSpan.innerHTML = `<span style="color: ${netColor};">₹${formatNumber(netRevenue)}</span>`;
                 } else {
@@ -618,7 +587,6 @@
                 netSpan.innerHTML = '<small style="color:#999;">-</small>';
             }
             
-            // Delay to avoid rate limiting (increased to 500ms)
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         {% endif %}
@@ -626,7 +594,6 @@
         console.log("Distance calculations completed!");
     }
 
-    // Improved route distance calculation
     async function getRouteDistance(fromCoords, toCoords) {
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromCoords.lon},${fromCoords.lat};${toCoords.lon},${toCoords.lat}?overview=false`;
         
@@ -653,14 +620,12 @@
         }
     }
 
-    // Start calculating distances after page loads
     console.log("Page loaded, starting distance calculations in 1 second...");
     setTimeout(function() {
         calculateTableDistances();
     }, 1000);
     {% endif %}
     {% else %}
-    // Initialize form filters only when on form page
     document.addEventListener('DOMContentLoaded', function() {
         filterMandis();
     });

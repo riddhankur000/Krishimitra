@@ -1,4 +1,3 @@
-// Mobile Navigation Toggle
 document.addEventListener('DOMContentLoaded', function() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
@@ -9,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close mobile menu when clicking a link
     const navLinks = document.querySelectorAll('.nav-menu a');
     navLinks.forEach(link => {
         link.addEventListener('click', function() {
@@ -17,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Mobile dropdown toggle for user menu
     const userMenuToggle = document.querySelector('.user-menu-toggle');
     const userDropdown = document.querySelector('.user-dropdown');
     
@@ -28,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Auto-close flash messages
     const alertCloses = document.querySelectorAll('.alert-close');
     alertCloses.forEach(closeBtn => {
         closeBtn.addEventListener('click', function() {
@@ -39,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Auto-dismiss flash messages after 5 seconds
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -51,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Form validation
 function validateForm(formId) {
     const form = document.getElementById(formId);
     if (!form) return true;
@@ -71,7 +65,6 @@ function validateForm(formId) {
     return isValid;
 }
 
-// Add animation for slide out
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideOut {
@@ -87,7 +80,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Search functionality for tables
 function filterTable(inputId, tableId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -116,14 +108,10 @@ function filterTable(inputId, tableId) {
     });
 }
 
-// Chart rendering helper (for future use with Chart.js)
 function renderChart(canvasId, data, type = 'line') {
-    // Placeholder for chart rendering
-    // Will be implemented when integrating Chart.js
     console.log('Chart would be rendered here:', canvasId, data, type);
 }
 
-// Price comparison calculator
 function calculateComparison(price1, price2) {
     const diff = price2 - price1;
     const percentDiff = ((diff / price1) * 100).toFixed(2);
@@ -134,7 +122,6 @@ function calculateComparison(price1, price2) {
     };
 }
 
-// Format currency for Indian Rupees
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
@@ -143,7 +130,6 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-// Export table to CSV
 function exportTableToCSV(tableId, filename = 'data.csv') {
     const table = document.getElementById(tableId);
     if (!table) return;

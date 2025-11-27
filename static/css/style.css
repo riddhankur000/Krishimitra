@@ -1,4 +1,3 @@
-/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -91,7 +90,6 @@ body {
     font-weight: 500;
 }
 
-/* User Dropdown Menu */
 .user-dropdown {
     position: relative;
 }
@@ -149,7 +147,6 @@ body {
     transition: 0.3s;
 }
 
-/* Flash Messages */
 .flash-container {
     position: fixed;
     top: 80px;
@@ -217,7 +214,6 @@ body {
     opacity: 1;
 }
 
-/* Hero Section */
 .hero {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: var(--white);
@@ -236,7 +232,6 @@ body {
     opacity: 0.9;
 }
 
-/* Buttons */
 .btn {
     display: inline-block;
     padding: 0.8rem 2rem;
@@ -268,7 +263,6 @@ body {
     background-color: var(--secondary-color);
 }
 
-/* Cards */
 .card {
     background-color: var(--white);
     border-radius: 10px;
@@ -288,7 +282,6 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Grid Layouts */
 .grid {
     display: grid;
     gap: 2rem;
@@ -307,7 +300,6 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
-/* Forms */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -343,7 +335,6 @@ textarea.form-control {
     min-height: 100px;
 }
 
-/* Tables */
 .table-container {
     overflow-x: auto;
     background-color: var(--white);
@@ -372,7 +363,6 @@ tbody tr:hover {
     background-color: var(--light-bg);
 }
 
-/* Footer */
 .footer {
     background-color: var(--dark-color);
     color: var(--white);
@@ -441,7 +431,6 @@ tbody tr:hover {
     align-items: center;
 }
 
-/* Section Styling */
 section {
     padding: 3rem 0;
 }
@@ -462,7 +451,6 @@ section {
     font-size: 1.1rem;
 }
 
-/* Page Headers */
 .page-header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: var(--white);
@@ -476,7 +464,6 @@ section {
     margin-bottom: 0.5rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
@@ -498,7 +485,6 @@ section {
         display: flex;
     }
 
-    /* Mobile dropdown adjustments */
     .user-dropdown {
         position: relative;
     }
@@ -549,7 +535,6 @@ section {
     }
 }
 
-/* Utility Classes */
 .text-center {
     text-align: center;
 }

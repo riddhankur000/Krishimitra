@@ -244,7 +244,6 @@
             const natAvgArray = Array(labels.length).fill(natAvg);
             const stAvgArray = Array(labels.length).fill(stAvg);
 
-            // Convert data to numbers to ensure proper rendering
             const numericData = dataPoints.map(d => parseFloat(d) || 0);
 
             new Chart(ctx.getContext('2d'), {
@@ -341,7 +340,6 @@
 
             console.log('Bar chart data:', barData);
 
-            // State Charts (only if has_state_data is true)
             if(barData.has_state_data) {
                 if(barData.state_desc.labels.length > 0) {
                     createComboChart('stateDescChart', barData.state_desc.labels, barData.state_desc.data, colorCostly, 'Top Price');
@@ -351,7 +349,6 @@
                 }
             }
 
-            // National Charts (always show)
             if(barData.national_desc.labels.length > 0) {
                 createComboChart('natDescChart', barData.national_desc.labels, barData.national_desc.data, colorCostly, 'Top Price');
             }

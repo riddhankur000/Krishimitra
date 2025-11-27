@@ -13,20 +13,16 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    user_type = db.Column(db.String(20), nullable=False)  # farmer, ngo, trader
-    
-    # Farmer specific fields
+    user_type = db.Column(db.String(20), nullable=False)  
     state = db.Column(db.String(50))
     district = db.Column(db.String(50))
     farm_size = db.Column(db.Float)
-    primary_crops = db.Column(db.String(500))  # Comma-separated crop names
+    primary_crops = db.Column(db.String(500))  
     
-    # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
     
-    # Relationships
     posts = db.relationship('CommunityPost', backref='author', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
@@ -62,6 +58,4 @@ class CommunityPost(db.Model):
     def __repr__(self):
         return f'<Post {self.title}>'
     
-
-# Add this to models.py
 
